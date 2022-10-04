@@ -49,32 +49,31 @@ static const int KNIGHT_MOVES[KNIGHT_MOVES_LEN] = {
 };
 
 static const Bitboard KNIGHT_MOVES_CORRESPONDING_MASK[KNIGHT_MOVES_LEN] = {
-   ~(FILE_MASKS['g' - 'a'] | FILE_MASKS['h' - 'a']),
-   ~(FILE_MASKS['a' - 'a'] | FILE_MASKS['b' - 'a']),
-   ~(FILE_MASKS['h' - 'a']),
-   ~(FILE_MASKS['a' - 'a']),
-   ~(FILE_MASKS['a' - 'a'] | FILE_MASKS['b' - 'a']),
-   ~(FILE_MASKS['g' - 'a'] | FILE_MASKS['h' - 'a']),
-   ~(FILE_MASKS['a' - 'a']),
-   ~(FILE_MASKS['h' - 'a']),
+   ~(FILE_MASKS['g' - 'a'] | FILE_MASKS['h' - 'a'] | RANK_MASKS[0]),
+   ~(FILE_MASKS['a' - 'a'] | FILE_MASKS['b' - 'a'] | RANK_MASKS[0]),
+   ~(FILE_MASKS['h' - 'a'] | RANK_MASKS[0] | RANK_MASKS[1]),
+   ~(FILE_MASKS['a' - 'a'] | RANK_MASKS[0] | RANK_MASKS[1]),
+   ~(FILE_MASKS['a' - 'a'] | FILE_MASKS['b' - 'a'] | RANK_MASKS[7]),
+   ~(FILE_MASKS['g' - 'a'] | FILE_MASKS['h' - 'a'] | RANK_MASKS[7]),
+   ~(FILE_MASKS['a' - 'a'] | RANK_MASKS[6] | RANK_MASKS[7]),
+   ~(FILE_MASKS['h' - 'a'] | RANK_MASKS[6] | RANK_MASKS[7]),
 };
 
-Bitboard gen_knight_moves(const Board *b, const PiecePos np) {
-   Bitboard res = 0;
-   const Color myc = get_piece_color(b, np);
-   for (int i = 0; i < KNIGHT_MOVES_LEN; ++i) {
-      if (get_piece_color(b, np + KNIGHT_MOVES[i]) != myc) {
-         res |= (((uint64_t) 1) << (np + KNIGHT_MOVES[i])) & KNIGHT_MOVES_CORRESPONDING_MASK[i];
-         if (np >= 6*8) { // if 7th or 8th rank, remove moves in the 1st and 2nd rank
-            res &= ~(RANK_MASKS[0] | RANK_MASKS[1]);
-         }
-         else if (np < 2*8) { // if 1st or 2nd rank, remove moves in the 7th and 8th rank
-            res &= ~(RANK_MASKS[7] | RANK_MASKS[6]);
-         }
-      }
-   }
-   return res;
-}
+#define KING_MOVES_LEN 8
+static const int KING_MOVES[KING_MOVES_LEN] = {
+   1, 7, 8, 9, -1, -7, -8, -9
+};
+
+static const Bitboard KING_MOVES_CORRESPONDING_MASK[KING_MOVES_LEN] = {
+   ~(FILE_MASKS['a' - 'a']),
+   ~(FILE_MASKS['h' - 'a'] | RANK_MASKS[0]),
+   ~(RANK_MASKS[0]),
+   ~(FILE_MASKS['a' - 'a'] | RANK_MASKS[0]),
+   ~(FILE_MASKS['h' - 'a']),
+   ~(FILE_MASKS['a' - 'a'] | RANK_MASKS[7]),
+   ~(RANK_MASKS[7]),
+   ~(FILE_MASKS['h' - 'a'] | RANK_MASKS[7]),
+};
 
 Bitboard gen_sliding_piece_moves(const Board *b, const PiecePos p, const PieceType t) {
    Bitboard res = 0;
@@ -96,6 +95,30 @@ Bitboard gen_sliding_piece_moves(const Board *b, const PiecePos p, const PieceTy
          setbit(res, x+y*8);
          x += DIRECTIONS[i][0];
          y += DIRECTIONS[i][1];
+      }
+   }
+   return res;
+}
+
+Bitboard gen_knight_moves(const Board *b, const PiecePos p) {
+   // King & Knight move gen seem to be similar, but I don't want to
+   // combine them until I make king move gen fully legal (attacked pos ...)
+   Bitboard res = 0;
+   const Color myc = get_piece_color(b, p);
+   for (int i = 0; i < KNIGHT_MOVES_LEN; ++i) {
+      if (get_piece_color(b, p + KNIGHT_MOVES[i]) != myc) {
+         res |= ( ((uint64_t) 1) << (p + KNIGHT_MOVES[i])) & KNIGHT_MOVES_CORRESPONDING_MASK[i];
+      }
+   }
+   return res;
+}
+
+Bitboard gen_king_moves(const Board *b, const PiecePos p) {
+   Bitboard res = 0;
+   const Color myc = get_piece_color(b, p);
+   for (int i = 0; i < KING_MOVES_LEN; ++i) {
+      if (get_piece_color(b, p + KING_MOVES[i]) != myc) {
+         res |= (((uint64_t) 1) << (p + KING_MOVES[i])) & KING_MOVES_CORRESPONDING_MASK[i];
       }
    }
    return res;
