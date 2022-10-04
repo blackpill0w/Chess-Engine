@@ -33,6 +33,7 @@ typedef struct {
 #define black_pieces(b) ((b)->pos[BK] | (b)->pos[BQ] | (b)->pos[BR] | (b)->pos[BB] | (b)->pos[BN] | (b)->pos[BP])
 #define all_pieces(b) (white_pieces(b) | black_pieces(b))
 #define ispos_occupied(b, pos) ( (all_pieces(b) & (pos)) != 0)
+#define opposite_color(c) (c == WHITE ? BLACK : c == BLACK ? WHITE : NONE)
 
 //Bitboard attacked_pos(Board b, Color c);
 /*!

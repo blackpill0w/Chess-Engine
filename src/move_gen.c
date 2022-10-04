@@ -1,22 +1,24 @@
+#include <stdint.h>
+
 #include "./move_gen.h"
 
 // Indices
-#define ROOK_FIRST_DIRECTION 0
-#define ROOK_LAST_DIRECTION 3
-#define BISHOP_FIRST_DIRECTION 4
-#define BISHOP_LAST_DIRECTION 7
+#define ROOK_DIRECTION_START 0
+#define ROOK_DIRECTION_END 3
+#define BISHOP_DIRECTION_START 4
+#define BISHOP_DIRECTION_END 7
 
-static const int DIRECTIONS[] = {
+static const int DIRECTIONS[][2] = {
    // Rook directions
-   1,
-   -1,
-   8,
-   -8,
+   {1, 0},
+   {-1, 0},
+   {0, 1},
+   {0, -1},
    // Bishop directions
-   9,
-   7,
-   -9,
-   -7,
+   {1, 1},
+   {1, -1},
+   {-1, 1},
+   {-1, -1},
 };
 
 static const Bitboard FILE_MASKS[8] = {
@@ -31,14 +33,14 @@ static const Bitboard FILE_MASKS[8] = {
 };
 
 static const Bitboard RANK_MASKS[8] = {
-   255ul,
-   255ul << 8,
-   255ul << 16,
-   255ul << 24,
-   255ul << 32,
-   255ul << 40,
-   255ul << 48,
-   255ul << 56,
+   (uint64_t) 255,
+   (uint64_t) 255 << 8,
+   (uint64_t) 255 << 16,
+   (uint64_t) 255 << 24,
+   (uint64_t) 255 << 32,
+   (uint64_t) 255 << 40,
+   (uint64_t) 255 << 48,
+   (uint64_t) 255 << 56,
 };
 
 #define KNIGHT_MOVES_LEN 8
@@ -57,48 +59,41 @@ static const Bitboard KNIGHT_MOVES_CORRESPONDING_MASK[KNIGHT_MOVES_LEN] = {
    ~(FILE_MASKS['h' - 'a']),
 };
 
-Bitboard gen_knight_moves(const Board *b, const Bitboard np) {
+Bitboard gen_knight_moves(const Board *b, const PiecePos np) {
    Bitboard res = 0;
-   Color myc = get_piece_color(b, np);
+   const Color myc = get_piece_color(b, np);
    for (int i = 0; i < KNIGHT_MOVES_LEN; ++i) {
-      res |= (1ul << (np + KNIGHT_MOVES[i])) & KNIGHT_MOVES_CORRESPONDING_MASK[i];
-      if (np < 2*8) { // if 1st or 2nd rank, remove moves in the 7th and 8th rank
-         res &= ~(RANK_MASKS[7] | RANK_MASKS[6]);
-      }
-      else if (np > 7*8) { // if 7th or 8th rank, remove moves in the 1st and 2nd rank
-         res &= ~(RANK_MASKS[0] | RANK_MASKS[1]);
-      }
-   }
-   return res;
-}
-
-Bitboard gen_rook_moves(const Board *b, const Bitboard rp) {
-   Bitboard res = 0;
-   for (int i = ROOK_FIRST_DIRECTION; i <= ROOK_LAST_DIRECTION; ++i) {
-      int pos = rp + DIRECTIONS[i];
-      // (x >= 0 && x < 8 && y >= 0 && y < 8)
-      // while (pos >= 0 && pos < 64 && pos % 8) {
-      for (int j = 0; j < 8 && ; ++j) {   
-         if (isbitset(all_pieces(b) & ~(rp), pos)) {
-            break;
+      if (get_piece_color(b, np + KNIGHT_MOVES[i]) != myc) {
+         res |= (((uint64_t) 1) << (np + KNIGHT_MOVES[i])) & KNIGHT_MOVES_CORRESPONDING_MASK[i];
+         if (np >= 6*8) { // if 7th or 8th rank, remove moves in the 1st and 2nd rank
+            res &= ~(RANK_MASKS[0] | RANK_MASKS[1]);
          }
-         setbit(res, pos);
-         pos += DIRECTIONS[i];
+         else if (np < 2*8) { // if 1st or 2nd rank, remove moves in the 7th and 8th rank
+            res &= ~(RANK_MASKS[7] | RANK_MASKS[6]);
+         }
       }
    }
    return res;
 }
 
-/*Bitboard gen_bishop_moves(const Board *b, const Bitboard bp) {
+Bitboard gen_sliding_piece_moves(const Board *b, const PiecePos p, const PieceType t) {
    Bitboard res = 0;
-   for (int i = BISHOP_FIRST_DIRECTION; i <= BISHOP_LAST_DIRECTION; ++i) {
-      int x = (bp % 8) + DIRECTIONS[i][0];
-      int y = (bp / 8) + DIRECTIONS[i][1];
+   const Color myc = get_piece_color(b, p);
+   const int start = (t == BISHOP) ? BISHOP_DIRECTION_START : ROOK_DIRECTION_START;
+   const int end = (t == ROOK) ? ROOK_DIRECTION_END : BISHOP_DIRECTION_END;
+   
+   for (int i = start; i <= end; ++i) {
+      int x = (p % 8) + DIRECTIONS[i][0];
+      int y = (p / 8) + DIRECTIONS[i][1];
       while (x >= 0 && x < 8 && y >= 0 && y < 8) {
-         if (isbitset(all_pieces(b) & ~(bp), x+y*8)) {
+         const Color enemyc = get_piece_color(b, x+y*8);
+         if (enemyc != NONE) {
+            if (enemyc == opposite_color(myc)) {
+               setbit(res, x+y*8);
+            }
             break;
          }
-         setbit(res, x + y*8);
+         setbit(res, x+y*8);
          x += DIRECTIONS[i][0];
          y += DIRECTIONS[i][1];
       }
@@ -106,7 +101,3 @@ Bitboard gen_rook_moves(const Board *b, const Bitboard rp) {
    return res;
 }
 
-Bitboard gen_queen_moves(const Board *b, const Bitboard qp) {
-   return ( gen_bishop_moves(b, qp) | gen_rook_moves(b, qp) );
-}
-*/

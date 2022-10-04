@@ -6,10 +6,6 @@
 
 Bitboard gen_knight_moves(const Board *b, const Bitboard np);
 
-Bitboard gen_rook_moves(const Board *b, Bitboard rp);
-
-Bitboard gen_bishop_moves(const Board *b, Bitboard bp);
-
-Bitboard gen_queen_moves(const Board *b, const Bitboard qp);
+Bitboard gen_sliding_piece_moves(const Board *b, const PiecePos p, const PieceType t);
 
 #endif // _MOVE_GEN_H

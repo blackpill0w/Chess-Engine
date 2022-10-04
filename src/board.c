@@ -15,7 +15,7 @@
 
 Color get_piece_color(const Board *b, const PiecePos pos) {
    for (int i=0; i < PIECES_LEN; ++i) {
-      if ((pos & b->pos[i]) != 0) {
+      if (( ( ((uint64_t) 1) << pos) & b->pos[i]) != 0) {
          return i <= WHITE_PIECES_END ? WHITE : BLACK;
       }
    }

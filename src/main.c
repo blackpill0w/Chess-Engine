@@ -10,10 +10,13 @@ void print_bb(Bitboard n);
 int main(void) {
    Board b;
    init_board(&b);
-   for (int i = 0; i < 64; ++i) {
-      print_bb(gen_rook_moves(&b, i));
+   setbit(b.pos[BN], 1);
+   for (PiecePos i = 2; i < 64; ++i) {
+      setbit(b.pos[BB], i);
+      print_bb(gen_sliding_piece_moves(&b, i, BISHOP));
       putchar('\n');
-      sleep(1);
+      unsetbit(b.pos[BB], i);
+      usleep(500 * 1000);
    }
    return 0;
 }

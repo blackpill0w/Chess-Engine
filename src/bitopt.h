@@ -1,9 +1,11 @@
 #ifndef _BITOPT_H
 #define _BITOPT_H
 
-#define setbit(n, i) ((n) |= (1ul << (i)))
-#define unsetbit(n, i) ((n) &= ~(1ul << (i)))
-#define isbitset(n, i) (((n) & (1ul << (i))) != 0)
-#define getbit(n, i) ((n) & (1ul << (i)))
+#define _ONE ((unsigned long long) 1)
+
+#define setbit(n, i) ((n) |= (_ONE << (i)))
+#define unsetbit(n, i) ((n) &= ~(_ONE << (i)))
+#define isbitset(n, i) (((n) & (_ONE << (i))) != 0)
+#define getbit(n, i) ((n) & (_ONE << (i)))
 
 #endif // _BITOPT_H
