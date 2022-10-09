@@ -4,20 +4,29 @@
 #include "./board.h"
 #include "./bitopt.h"
 #include "./move_gen.h"
+#include "./pawn_move_gen.h"
 
+void print_color(PieceColor c);
 void print_bb(Bitboard n);
 
 int main(void) {
    Board b;
    init_board(&b);
-   for (PiecePos i = 0; i < 64; ++i) {
-      setbit(b.pos[BN], i);
-      print_bb(gen_knight_moves(&b, i));
+   /* int i = 10; */
+   for (int i = 0; i < 64; ++i) {
+   /* for (int i = 63; i >= 0; --i) { */
+      setbit(b.pos[WK], i);
+      //print_color(get_piece_color(&b, 1ul << i));
+      print_bb(gen_king_moves(&b, 1ul << i));
       putchar('\n');
-      unsetbit(b.pos[BN], i);
-      usleep(500 * 1000);
+      unsetbit(b.pos[WK], i);
+      usleep(300 * 1000);
    }
    return 0;
+}
+
+void print_color(PieceColor c) {
+   printf("%s\n", c == WHITE ? "WHITE" : c == BLACK ? "BLACK" : "NONE");
 }
 
 void print_bb(Bitboard n) {

@@ -8,8 +8,8 @@
 typedef uint64_t Bitboard;
 typedef uint64_t PiecePos;
 
-enum Color {NONE, WHITE, BLACK};
-typedef enum Color Color;
+enum PieceColor {NONE, WHITE, BLACK};
+typedef enum PieceColor PieceColor;
 
 enum PieceType {KING, QUEEN, ROOK, BISHOP, KNIGHT, PAWN};
 typedef enum PieceType PieceType;
@@ -41,6 +41,6 @@ typedef struct {
   @return NONE if the square is empty.
   @return WHITE or BLACK if square is occupied.
 */
-Color get_piece_color(const Board *b, const PiecePos pos);
+PieceColor get_piece_color(const Board *b, const PiecePos pos);
 
 #endif // _BOARD_H
