@@ -1,25 +1,8 @@
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "./move_gen.h"
-
-// Indices
-#define ROOK_DIRECTION_START 0
-#define ROOK_DIRECTION_END 3
-#define BISHOP_DIRECTION_START 4
-#define BISHOP_DIRECTION_END 7
-
-static const int DIRECTIONS[][2] = {
-   // Rook directions
-   {1, 0},
-   {-1, 0},
-   {0, 1},
-   {0, -1},
-   // Bishop directions
-   {1, 1},
-   {1, -1},
-   {-1, 1},
-   {-1, -1},
-};
+#include "./debug.h"
 
 static const Bitboard FILE_MASKS[8] = {
   0x0101010101010101,
@@ -41,6 +24,39 @@ static const Bitboard RANK_MASKS[8] = {
    (uint64_t) 255 << 40,
    (uint64_t) 255 << 48,
    (uint64_t) 255 << 56,
+};
+
+// Indices
+#define ROOK_DIRECTION_START 0
+#define ROOK_DIRECTION_END 3
+#define BISHOP_DIRECTION_START 4
+#define BISHOP_DIRECTION_END 7
+#define DIRECTIONS_LEN 8
+
+static const int DIRECTIONS[DIRECTIONS_LEN] = {
+   // Rook directions
+   1,
+   8,
+   -1,
+   -8,
+   // Bishop directions
+   9,
+   7,
+   -7,
+   -9,
+};
+
+static const Bitboard DIRECTIONS_MASKS[DIRECTIONS_LEN] = {
+   // Rook directions
+   FILE_MASKS['h' - 'a'],
+   RANK_MASKS[7],
+   FILE_MASKS['a' - 'a'],
+   RANK_MASKS[0],
+   // Bishop directions
+   FILE_MASKS['h' - 'a'] | RANK_MASKS[7],
+   FILE_MASKS['a' - 'a'] | RANK_MASKS[7],
+   FILE_MASKS['h' - 'a'] | RANK_MASKS[0],
+   FILE_MASKS['a' - 'a'] | RANK_MASKS[0],
 };
 
 #define KNIGHT_MOVES_LEN 8
@@ -77,31 +93,40 @@ static const Bitboard KING_MOVES_CORRESPONDING_MASK[KING_MOVES_LEN] = {
    ~(FILE_MASKS['h' - 'a']),
 };
 
-// NOTE: this still requires piece's index
 Bitboard gen_sliding_piece_moves(const Board *b, const PiecePos p, const PieceType t) {
    Bitboard res = 0;
    const PieceColor myc = get_piece_color(b, p);
    const int start = (t == BISHOP) ? BISHOP_DIRECTION_START : ROOK_DIRECTION_START;
    const int end = (t == ROOK) ? ROOK_DIRECTION_END : BISHOP_DIRECTION_END;
-   
    for (int i = start; i <= end; ++i) {
-      int x = (p % 8) + DIRECTIONS[i][0];
-      int y = (p / 8) + DIRECTIONS[i][1];
-      while (x >= 0 && x < 8 && y >= 0 && y < 8) {
-         const PieceColor enemyc = get_piece_color(b, x+y*8);
+      if (p & DIRECTIONS_MASKS[i]) {
+         continue;
+      }
+      Bitboard pos = DIRECTIONS[i] > 0 ? p << DIRECTIONS[i] : p >> -DIRECTIONS[i];
+      while (pos != 0) {
+         const PieceColor enemyc = get_piece_color(b, pos);
          if (enemyc != NONE) {
             if (enemyc == opposite_color(myc)) {
-               setbit(res, x+y*8);
+               res |= pos;
             }
             break;
          }
-         setbit(res, x+y*8);
-         x += DIRECTIONS[i][0];
-         y += DIRECTIONS[i][1];
+         res |= pos;
+         if (pos & DIRECTIONS_MASKS[i]) {
+            break;
+         }
+         if (DIRECTIONS[i] > 0) {
+            pos <<= DIRECTIONS[i];
+         }
+         else {
+            pos >>= -DIRECTIONS[i];
+         }
       }
    }
    return res;
 }
+
+
 
 Bitboard gen_knight_moves(const Board *b, const PiecePos p) {
    Bitboard res = 0;

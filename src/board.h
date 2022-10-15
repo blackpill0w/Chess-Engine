@@ -28,18 +28,17 @@ typedef struct {
    Bitboard black_attacked;
 } Board;
 
-#define init_board(b) memset(b, 0, sizeof(Board))
+#define board_new() (Board) {.pos = {0}, .white_attacked = 0, .black_attacked = 0}
 #define white_pieces(b) ((b)->pos[WK] | (b)->pos[WQ] | (b)->pos[WR] | (b)->pos[WB] | (b)->pos[WN] | (b)->pos[WP])
 #define black_pieces(b) ((b)->pos[BK] | (b)->pos[BQ] | (b)->pos[BR] | (b)->pos[BB] | (b)->pos[BN] | (b)->pos[BP])
 #define all_pieces(b) (white_pieces(b) | black_pieces(b))
 #define ispos_occupied(b, pos) ( (all_pieces(b) & (pos)) != 0)
 #define opposite_color(c) (c == WHITE ? BLACK : c == BLACK ? WHITE : NONE)
 
-//Bitboard attacked_pos(Board b, Color c);
 /*!
   Get color of a piece given its positions.
   @return NONE if the square is empty.
-  @return WHITE or BLACK if square is occupied.
+  @return WHITE or BLACK if square is occupied; the color of the occupying piece.
 */
 PieceColor get_piece_color(const Board *b, const PiecePos pos);
 

@@ -1,7 +1,7 @@
 #ifndef _BITOPT_H
 #define _BITOPT_H
 
-#define _ONE ((unsigned long long) 1)
+#define _ONE (1ull)
 
 #define setbit(n, i) ((n) |= (_ONE << (i)))
 #define unsetbit(n, i) ((n) &= ~(_ONE << (i)))
