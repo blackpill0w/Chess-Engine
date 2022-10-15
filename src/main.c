@@ -12,11 +12,11 @@ int main(void) {
    /* int i = 10; */
    /* for (int i = 63; i >= 0; --i) { */
    for (int i = 0; i < 64; ++i) {
-      setbit(b.pos[WQ], i);
+      setbit(b.pos[BP], i);
       //print_color(get_piece_color(&b, 1ul << i));
-      print_bb(gen_sliding_piece_moves(&b, 1ul << i, QUEEN));
+      print_bb(gen_double_push(&b, 1ul << i));
       putchar('\n');
-      unsetbit(b.pos[WQ], i);
+      unsetbit(b.pos[BP], i);
       usleep(500 * 1000);
    }
    return 0;

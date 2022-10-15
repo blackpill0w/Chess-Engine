@@ -126,8 +126,6 @@ Bitboard gen_sliding_piece_moves(const Board *b, const PiecePos p, const PieceTy
    return res;
 }
 
-
-
 Bitboard gen_knight_moves(const Board *b, const PiecePos p) {
    Bitboard res = 0;
    const PieceColor myc = get_piece_color(b, p);
