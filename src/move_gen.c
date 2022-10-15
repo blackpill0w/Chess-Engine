@@ -1,30 +1,9 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "./utils.h"
 #include "./move_gen.h"
 #include "./debug.h"
-
-static const Bitboard FILE_MASKS[8] = {
-  0x0101010101010101,
-  0x0202020202020202,
-  0x0404040404040404,
-  0x0808080808080808,
-  0x1010101010101010,
-  0x2020202020202020,
-  0x4040404040404040,
-  0x8080808080808080,
-};
-
-static const Bitboard RANK_MASKS[8] = {
-   (uint64_t) 255,
-   (uint64_t) 255 << 8,
-   (uint64_t) 255 << 16,
-   (uint64_t) 255 << 24,
-   (uint64_t) 255 << 32,
-   (uint64_t) 255 << 40,
-   (uint64_t) 255 << 48,
-   (uint64_t) 255 << 56,
-};
 
 // Indices
 #define ROOK_DIRECTION_START 0
