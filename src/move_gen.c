@@ -1,31 +1,10 @@
-#include <stdint.h>
 #include <stdlib.h>
 
 #include "./utils.h"
 #include "./move_gen.h"
 #include "./debug.h"
 
-// Indices
-#define ROOK_DIRECTION_START 0
-#define ROOK_DIRECTION_END 3
-#define BISHOP_DIRECTION_START 4
-#define BISHOP_DIRECTION_END 7
-#define DIRECTIONS_LEN 8
-
-static const int DIRECTIONS[DIRECTIONS_LEN] = {
-   // Rook directions
-   1,
-   8,
-   -1,
-   -8,
-   // Bishop directions
-   9,
-   7,
-   -7,
-   -9,
-};
-
-static const Bitboard DIRECTIONS_MASKS[DIRECTIONS_LEN] = {
+static const Bitboard DIR_MASKS[DIR_LEN] = {
    // Rook directions
    FILE_MASKS['h' - 'a'],
    RANK_MASKS[7],
@@ -64,24 +43,24 @@ static const int KING_MOVES[KING_MOVES_LEN] = {
 static const Bitboard KING_MOVES_CORRESPONDING_MASK[KING_MOVES_LEN] = {
    ~(FILE_MASKS['a' - 'a']),
    ~(FILE_MASKS['h' - 'a']),
-   ~(0),
+   ~(0ull),
    ~(FILE_MASKS['a' - 'a']),
    ~(FILE_MASKS['h' - 'a']),
    ~(FILE_MASKS['a' - 'a']),
-   ~(0),
+   ~(0ull),
    ~(FILE_MASKS['h' - 'a']),
 };
 
 Bitboard gen_sliding_piece_moves(const Board *b, const PiecePos p, const PieceType t) {
    Bitboard res = 0;
    const PieceColor myc = get_piece_color(b, p);
-   const int start = (t == BISHOP) ? BISHOP_DIRECTION_START : ROOK_DIRECTION_START;
-   const int end = (t == ROOK) ? ROOK_DIRECTION_END : BISHOP_DIRECTION_END;
+   const int start = (t == BISHOP) ? BISHOP_DIR_START : ROOK_DIR_START;
+   const int end = (t == ROOK) ? ROOK_DIR_END : BISHOP_DIR_END;
    for (int i = start; i <= end; ++i) {
-      if (p & DIRECTIONS_MASKS[i]) {
+      if (p & DIR_MASKS[i]) {
          continue;
       }
-      Bitboard pos = DIRECTIONS[i] > 0 ? p << DIRECTIONS[i] : p >> -DIRECTIONS[i];
+      Bitboard pos = DIR[i] > 0 ? p << DIR[i] : p >> -DIR[i];
       while (pos != 0) {
          const PieceColor enemyc = get_piece_color(b, pos);
          if (enemyc != NONE) {
@@ -91,14 +70,14 @@ Bitboard gen_sliding_piece_moves(const Board *b, const PiecePos p, const PieceTy
             break;
          }
          res |= pos;
-         if (pos & DIRECTIONS_MASKS[i]) {
+         if (pos & DIR_MASKS[i]) {
             break;
          }
-         if (DIRECTIONS[i] > 0) {
-            pos <<= DIRECTIONS[i];
+         if (DIR[i] > 0) {
+            pos <<= DIR[i];
          }
          else {
-            pos >>= -DIRECTIONS[i];
+            pos >>= -DIR[i];
          }
       }
    }

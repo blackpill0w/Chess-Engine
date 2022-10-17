@@ -8,10 +8,10 @@
 // enum to access pieces' positions
 enum {WK = 0, WQ, WR, WB, WN, WP, BK, BQ, BR, BB, BN, BP};
 #define PIECES_LEN 12
-#define WHITE_PIECES_START 0
-#define WHITE_PIECES_END 5
-#define BLACK_PIECES_START 6
-#define BLACK_PIECES_END 11
+#define WP_START 0
+#define WP_END 5
+#define BP_START 6
+#define BP_END 11
 
 typedef struct {
    Bitboard pos[PIECES_LEN]; // Pieces' bitboards
@@ -59,6 +59,6 @@ typedef struct {
   @return NONE if the square is empty.
   @return WHITE or BLACK if square is occupied; the color of the occupying piece.
 */
-PieceColor get_piece_color(const Board *b, const PiecePos pos);
+PieceColor get_piece_color(const Board *b, const PiecePos p);
 
 #endif // _BOARD_H
