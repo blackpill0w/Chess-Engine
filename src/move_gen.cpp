@@ -51,7 +51,7 @@ Bitboard Board::gen_sliding_piece_moves(const Square s, const PieceType t) const
       Square pos{ s + DIR[i] };
       while (pos >= 0 && pos < 64) {
          const PieceColor enemyc{ get_piece_color(pos) };
-         if (enemyc != NONE) {
+         if (enemyc != NoColor) {
             if (enemyc == opposite_color(myc)) {
                res |= (1ull << pos);
             }
@@ -91,7 +91,7 @@ Bitboard Board::gen_king_moves(const Square s) const {
          res |= 1ull << target;
       }
    }
-   return res & ~(myc == WHITE ? black_attacked : white_attacked);
+   return res & ~(myc == White ? black_attacked : white_attacked);
 }
 
 } // namespace Chess

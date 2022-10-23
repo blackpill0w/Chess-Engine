@@ -14,15 +14,15 @@ inline constexpr unsigned invalid_index{ 99999999 };
 typedef uint64_t Bitboard;
 typedef uint64_t PiecePos;
 
-enum PieceColor : int {NONE, WHITE, BLACK};
+enum PieceColor : int {NoColor, White, Black};
 inline PieceColor opposite_color(PieceColor c) {
-   return (c == WHITE ? BLACK : c == BLACK ? WHITE : NONE);
+   return (c == White ? Black : c == Black ? White : NoColor);
 }
 inline int pawn_direction(PieceColor c) {
-   return (c == WHITE ? 1 : -1);
+   return (c == White ? 1 : -1);
 }
 
-enum PieceType : int {Knight, Bishop, Rook, Queen, King, Pawn};
+enum PieceType : int {Knight, Bishop, Rook, Queen, King, Pawn, NoType};
 
 inline constexpr array<Bitboard, 8> FILE_MASKS {
    0x0101010101010101,
@@ -145,7 +145,7 @@ enum MoveType {
 inline Move new_move(const Square from, const Square to,
                      const MoveType mt = Normal,
                      const PieceType pt = Queen) {
-   return from | (to << 6) | mt | (pt << 12);
+   return mt | (pt << 12) | (to << 6) | from;
 }
 
 } // namespace Chess

@@ -8,7 +8,7 @@ namespace Chess
 {
 
 Bitboard Board::gen_pawn_push(const Square s, const PieceColor c) const {
-   const PieceColor myc{ c == NONE ? get_piece_color(s) : c };
+   const PieceColor myc{ c == NoColor ? get_piece_color(s) : c };
    Square pushpos{ s + 8*pawn_direction(myc) };
    if (pushpos < 0 || pushpos > 63 || ispos_occupied(pushpos)) {
       return 0;
@@ -31,8 +31,8 @@ Bitboard Board::gen_pawn_attacks(const Square s) const {
    const PieceColor myc{ get_piece_color(s) };
    constexpr array<int, 2> targets{9, 7};
    const array<Bitboard, 2> masks {
-      myc == WHITE ? ~(FILE_MASKS[FILE_A] | RANK_MASKS[RANK_1]) : ~(FILE_MASKS[FILE_H] | RANK_MASKS[RANK_8]),
-      myc == WHITE ? ~(FILE_MASKS[FILE_H] | RANK_MASKS[RANK_1]) : ~(FILE_MASKS[FILE_A] | RANK_MASKS[RANK_8]),
+      myc == White ? ~(FILE_MASKS[FILE_A] | RANK_MASKS[RANK_1]) : ~(FILE_MASKS[FILE_H] | RANK_MASKS[RANK_8]),
+      myc == White ? ~(FILE_MASKS[FILE_H] | RANK_MASKS[RANK_1]) : ~(FILE_MASKS[FILE_A] | RANK_MASKS[RANK_8]),
    };
    for (int i = 0; i < 2; ++i) {
       const Square target{ s + targets[i]*pawn_direction(myc) };

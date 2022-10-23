@@ -4,6 +4,10 @@
 namespace Chess
 {
 
+Board::Board(const string& FEN) {
+   load_FEN(FEN);
+}
+
 Bitboard Board::white_pieces() const {
    return (piecesBB[WK] | piecesBB[WQ] | piecesBB[WR] | piecesBB[WB] | piecesBB[WN] | piecesBB[WP]);
 }
@@ -14,6 +18,34 @@ Bitboard Board::black_pieces() const {
 
 Bitboard Board::all_pieces() const {
    return white_pieces() | black_pieces();
+}
+
+PieceType Board::get_piece_type(const Square s) const {
+   PieceType t{ NoType };
+   for (unsigned i = 0; i < piecesBB.size(); ++i) {
+      if ((1ull << s) & piecesBB[i]) {
+         if (i == WK || i == BK) {
+            t = King;
+         }
+         else if (i == WQ || i == BQ) {
+            t = Queen;
+         }
+         else if (i == WR || i == BR) {
+            t = Rook;
+         }
+         else if (i == WB || i == BB) {
+            t = Bishop;
+         }
+         else if (i == WN || i == BN) {
+            t = Knight;
+         }
+         else if (i == WP || i == BP) {
+            t = Pawn;
+         }
+         break;
+      }
+   }
+   return t;
 }
 
 bool Board::ispos_occupied(const Square s) const {
@@ -31,7 +63,7 @@ unsigned Board::get_piece_at(const Square s) const {
 
 PieceColor Board::get_piece_color(const Square s) const {
    const unsigned res{ get_piece_at(s) };
-   return res <= WP_END ? WHITE : res <= BP_END ? BLACK : NONE;
+   return res <= WP_END ? White : res <= BP_END ? Black : NoColor;
 }
 
 void Board::move(const Square from, const Square to) {

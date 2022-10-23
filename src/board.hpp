@@ -1,10 +1,12 @@
 #ifndef _BOARD_HPP
 #define _BOARD_HPP
 
+#include <string>
 #include <array>
 
 #include "./utils.hpp"
 
+using std::string;
 using std::array;
 
 constexpr unsigned WP_START{ 0 };
@@ -18,15 +20,27 @@ namespace Chess {
 enum : unsigned { WK, WQ, WR, WB, WN, WP, BK, BQ, BR, BB, BN, BP };
 
 class Board {
-private:
-   array<Move, 256> move_history;
-   int last_move_index = -1;
+protected:
+   array<Move, 256> move_history{};
+   int last_move_index{ -1 };
+   Square enpassant_target{};
 public:
-   array<Bitboard, 12> piecesBB; // Pieces' bitboards
-   Bitboard white_attacked;
-   Bitboard black_attacked;
+   array<Bitboard, 12> piecesBB{}; // Pieces' bitboards
+   Bitboard white_attacked{};
+   Bitboard black_attacked{};
 public:
+   /*!
+     Default constructor, initialize an empty board.
+   */
    Board() = default;
+   /*!
+     TODO
+   */
+   Board(const string& FEN);
+   /*!
+     TODO
+   */
+   void load_FEN(const string& FEN);
    /*!
      Returns a Bitboard containing all white pieces.
    */
@@ -39,6 +53,10 @@ public:
      Returns a Bitboard containing all pieces.
    */
    Bitboard all_pieces() const;
+   /*!
+     TODO
+   */
+   PieceType get_piece_type(const Square s) const;
    /*!
      Check if a position is occupied.
      @param s: the position of the piece to be tested.
@@ -53,7 +71,7 @@ public:
    /*!
      Get color of a piece given its positions.
      @return NONE if the square is empty.
-     @return WHITE or BLACK if square is occupied; the color of the occupying piece.
+     @return White or Black if square is occupied; the color of the occupying piece.
    */
    PieceColor get_piece_color(const Square s) const;
    /*!
@@ -88,7 +106,7 @@ public:
 
      @return a Bitboard containing the moves.
    */
-   Bitboard gen_pawn_push(const Square s, const PieceColor c = NONE) const;
+   Bitboard gen_pawn_push(const Square s, const PieceColor c = NoColor) const;
 
    /*!
      Generate pawn push and double push if the target square is empty.
@@ -111,6 +129,7 @@ public:
    */
    void move(const Square from, const Square to);
 };
+
 } // namespace Chess
 
 #endif // _BOARD_HPP
