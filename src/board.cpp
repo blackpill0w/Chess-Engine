@@ -67,7 +67,17 @@ PieceColor Board::get_piece_color(const Square s) const {
 }
 
 void Board::move(const Square from, const Square to) {
-   move_history.at(++last_move_index) = new_move(from, to);
+   MoveType mt;
+   if (enpassant_square != NoSquare) {
+      enpassant_square = NoSquare;
+   }
+   if (get_piece_type(from) == Pawn && abs(to - from) == 8*2) {
+      mt = En_passant;
+      enpassant_square = to - 8*pawn_direction(get_piece_color(from));
+   } else if (get_piece_type(from) == King && abs(to - from) == 2) {
+      mt = Castling;
+   }
+   move_history.at(++last_move_index) = new_move(from, to, mt);
 }
 
 } // namespace Chess

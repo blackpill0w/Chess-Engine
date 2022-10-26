@@ -1,11 +1,9 @@
-#ifndef _DEBUG_HPP
-#define _DEBUG_HPP
+#pragma once
 
 #include <iostream>
 
 #include "./board.hpp"
 #include "./bitopt.hpp"
-
 
 using std::cout;
 
@@ -41,4 +39,3 @@ inline void print_board(Chess::Board& b, Chess::PieceColor p = Chess::NoColor) {
       cout << '\n';
    }
 }
-#endif // _DEBUG_HPP

@@ -1,5 +1,4 @@
-#ifndef _UTILS_HPP
-#define _UTILS_HPP
+#pragma once
 
 #include <array>
 #include <cstdint>
@@ -106,23 +105,38 @@ enum Square : int {
    A6, B6, C6, D6, E6, F6, G6, H6,
    A7, B7, C7, D7, E7, F7, G7, H7,
    A8, B8, C8, D8, E8, F8, G8, H8,
-   NO_SQUARE
+   NoSquare
 };
 
-#define ENABLE_BASE_OPERATORS_FOR(T)                                \
-constexpr T operator+(T d1, int d2) { return T(int(d1) + d2); }    \
-constexpr T operator-(T d1, int d2) { return T(int(d1) - d2); }    \
-constexpr T operator-(T d) { return T(-int(d)); }                  \
-inline T& operator+=(T& d1, int d2) { return d1 = d1 + d2; }       \
-inline T& operator-=(T& d1, int d2) { return d1 = d1 - d2; }
+#ifdef DEBUG
+#include <iostream>
+inline std::ostream& operator<<(std::ostream& os, const Square s) {
+   if (s == NoSquare) {
+      return os << "No Square";
+   }
+   else {
+      std::string str{ "A1" };
+      str[0] += int(s%8);
+      str[1] += int(s/8);
+      return os << str;
+   }
+}
+#endif // DEBUG
 
-#define ENABLE_INCR_OPERATORS_FOR(T)                                \
-inline T& operator++(T& d) { return d = T(int(d) + 1); }           \
-inline T& operator--(T& d) { return d = T(int(d) - 1); }
+#define ENABLE_BASE_OPERATORS_FOR(T)                               \
+   constexpr T operator+(T d1, int d2) { return T(int(d1) + d2); } \
+   constexpr T operator-(T d1, int d2) { return T(int(d1) - d2); } \
+   constexpr T operator-(T d) { return T(-int(d)); }               \
+   inline T& operator+=(T& d1, int d2) { return d1 = d1 + d2; }    \
+   inline T& operator-=(T& d1, int d2) { return d1 = d1 - d2; }
+
+#define ENABLE_INCR_OPERATORS_FOR(T)                               \
+   inline T& operator++(T& d) { return d = T(int(d) + 1); }        \
+   inline T& operator--(T& d) { return d = T(int(d) - 1); }
 
 #define ENABLE_OPERATORS_FOR(T)  \
-ENABLE_BASE_OPERATORS_FOR(T)     \
-ENABLE_INCR_OPERATORS_FOR(T)
+   ENABLE_BASE_OPERATORS_FOR(T)  \
+   ENABLE_INCR_OPERATORS_FOR(T)
 
 
 ENABLE_OPERATORS_FOR(Square)
@@ -144,10 +158,8 @@ enum MoveType {
 
 inline Move new_move(const Square from, const Square to,
                      const MoveType mt = Normal,
-                     const PieceType pt = Queen) {
+                     const PieceType pt = Queen) { // promotion type
    return mt | (pt << 12) | (to << 6) | from;
 }
 
 } // namespace Chess
-
-#endif // _UTILS_HPP

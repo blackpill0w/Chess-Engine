@@ -1,5 +1,4 @@
-#ifndef _BOARD_HPP
-#define _BOARD_HPP
+#pragma once
 
 #include <string>
 #include <array>
@@ -23,8 +22,8 @@ class Board {
 protected:
    array<Move, 256> move_history{};
    int last_move_index{ -1 };
-   Square enpassant_target{};
 public:
+   Square enpassant_square{ NoSquare };
    array<Bitboard, 12> piecesBB{}; // Pieces' bitboards
    Bitboard white_attacked{};
    Bitboard black_attacked{};
@@ -131,5 +130,3 @@ public:
 };
 
 } // namespace Chess
-
-#endif // _BOARD_HPP

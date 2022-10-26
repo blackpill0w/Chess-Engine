@@ -36,7 +36,7 @@ Bitboard Board::gen_pawn_attacks(const Square s) const {
    };
    for (int i = 0; i < 2; ++i) {
       const Square target{ s + targets[i]*pawn_direction(myc) };
-      if (get_piece_color(target) == opposite_color(myc)) {
+      if (get_piece_color(target) == opposite_color(myc) || target == enpassant_square) {
          res |= (1ull << target) & masks[i];
       }
    }
