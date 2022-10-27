@@ -4,11 +4,11 @@
 #include <string>
 #include <regex>
 #include <iostream>
+#include <unordered_map>
 
 using std::regex;
 using std::string;
 using std::regex_match;
-
 
 namespace Chess
 {
@@ -43,6 +43,12 @@ static size_t find_nth(const string &s, const char delim, int n) {
    return pos;
 }
 
+
+static const std::unordered_map<char, unsigned> char_to_piecesI{
+   {'k', WK}, {'q', WQ},
+   {'r', WR}, {'b', WB},
+   {'n', WN}, {'p', WP},
+};
 void add_pieces(Board *b, const string& fen_pieces) {
    int x{ 0 };
    int y{ 7 };
@@ -55,25 +61,7 @@ void add_pieces(Board *b, const string& fen_pieces) {
          x += c - '0';
       }
       else {
-         int i{ 0 };
-         if (tolower(c) == 'k') {
-            i = WK;
-         }
-         else if (tolower(c) == 'q') {
-            i = WQ;
-         }
-         else if (tolower(c) == 'r') {
-            i = WR;
-         }
-         else if (tolower(c) == 'b') {
-            i = WB;
-         }
-         else if (tolower(c) == 'n') {
-            i = WN;
-         }
-         else if (tolower(c) == 'p') {
-            i = WP;
-         }
+         unsigned i { char_to_piecesI.at( tolower(c) ) };
          if (islower(c)) {
             i += 6;
          }
