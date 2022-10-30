@@ -1,6 +1,6 @@
 # Chess-Engine
-Chess Engine in C++17.
+Chess Engine in C.
 # Building
 This was tested only on linux.
 <br>Run this in a terminal (from the root directory of the project):
-<br>`mkdir build && cd build && cmake .. && cmake --build .`
+<br>`meson setup build && cd build && meson compile`
