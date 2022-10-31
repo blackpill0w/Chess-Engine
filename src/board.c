@@ -18,7 +18,7 @@ Board *new_board(char FEN[]) {
    vec_reserve(b->move_history, 64);
 
    vec_init(b->movelist);
-   vec_reserve(b->movelist, 128);
+   vec_reserve(b->movelist, 64);
 
    load_fen(b, FEN);
    gen_board_legal_moves(b);
