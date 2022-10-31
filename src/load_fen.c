@@ -13,6 +13,9 @@ enum { PiecesPos, ColorToPlay,
 static void fen_add_pieces(Board *b, const char *fen_pieces);
 
 void load_fen(Board *b, char FEN[]) {
+   if (!vec_isempty(b->move_history)) {
+      vec_clear(b->move_history);
+   }
    const char *fen_regex_str = "^([kqrbnpKQRBNP1-8]{1,8}\\/){7}[kqrbnpKQRBNP1-8]{1,8} "
       "(w|b) (-|[KQkq]{1,4}) (-|([a-h][0-8])) [1-4]?[0-9] [0-9]{1,3}$";
    regex_t fen_regex;
@@ -30,6 +33,10 @@ void load_fen(Board *b, char FEN[]) {
    }
    strtok(FEN, " ");
    fen_add_pieces(b, FEN);
+
+   b->color_to_play = strtok(NULL, " ")[0] == 'w' ? White : Black;
+
+   gen_board_legal_moves(b);
 }
 
 void fen_add_pieces(Board *b, const char *fen_pieces) {

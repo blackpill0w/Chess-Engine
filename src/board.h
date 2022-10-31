@@ -34,14 +34,21 @@ typedef struct {
 } Board;
 
 /*!
-  Default constructor, initialize an empty board.
+  Default constructor.
+  @param FEN: an (modifiable) array of characters that contains a FEN notation string.
+  WARNING: the FEN string MUST be valid, otherwise, the engine aborts.
+
+  @return a pointer to a `Board` object.
 */
 Board *new_board(char FEN[]);
 
+//! Free allocated resources.
 void free_board(Board *b);
 
 /*!
-  TODO
+  Load a FEN string into a board and generate legal moves.
+  @param b: a pointer to a `Board` object.
+  @parab FEN: an (modifiable) array of characters that contains a FEN notation string.
 */
 void load_fen(Board *b, char FEN[]);
 
@@ -141,7 +148,9 @@ Bitboard gen_pawn_attacks(Board *b, const Square s);
 void gen_piece_moves(Board *b, const Square s);
 
 /*!
-  TODO
+  Generate all legal moves at a given position, the result is stored
+  in `b->movelist`.
+  @param b: a pointer to a `Board` object.
 */
 void gen_board_legal_moves(Board *b);
 

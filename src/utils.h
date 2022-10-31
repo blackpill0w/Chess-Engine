@@ -8,12 +8,9 @@ typedef uint64_t Bitboard;
 typedef uint64_t PiecePos;
 
 typedef enum {NoColor, White, Black} PieceColor;
-static PieceColor opposite_color(PieceColor c) {
-   return (c == White ? Black : c == Black ? White : NoColor);
-}
-static int pawn_direction(PieceColor c) {
-   return (c == White ? 1 : -1);
-}
+#define opposite_color(c) (c == White ? Black : c == Black ? White : NoColor)
+#define str_piece_color(c) (c == White ? "White" : c == Black ? "Black" : "NoColor")
+#define pawn_direction(c) (c == White ? 1 : -1)
 
 typedef enum { Knight, Bishop, Rook, Queen, King, Pawn, NoType } PieceType;
 
@@ -78,13 +75,9 @@ typedef enum {
 
 #ifdef CHESS_DEBUG
 
-#include <string.h>
-static char *square_to_str(const Square s) {
-   static char str[10];
-   if (s == NoSquare) {
-      strcpy(str, "No Square");
-   }
-   else {
+static char *str_square(const Square s) {
+   static char str[] = "No Square";
+   if (s != NoSquare) {
       str[0] = 'A' + int(s%8);
       str[1] = '1' + int(s/8);
       str[2] = 0;

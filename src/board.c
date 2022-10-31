@@ -1,9 +1,10 @@
 #include "./board.h"
 
+#include <stdbool.h>
+#include <stdlib.h>
+
 #include "./utils.h"
 #include "./bitopt.h"
-
-#include <stdlib.h>
 
 Board *new_board(char FEN[]) {
    Board *b = malloc(sizeof(Board));
@@ -21,7 +22,6 @@ Board *new_board(char FEN[]) {
    vec_reserve(b->movelist, 64);
 
    load_fen(b, FEN);
-   gen_board_legal_moves(b);
 
    return b;
 }
@@ -111,17 +111,28 @@ void save_move(Board *b, const Square from, const Square to) {
 }
 
 void move(Board *b, const Square from, const Square to) {
+   bool valid_move = false;
    for (int i = 0; i < vec_len(b->movelist); ++i) {
       if (vec_at(b->movelist, i).piece_pos == from
           && (vec_at(b->movelist, i).piece_pos & to)
       ) {
+         valid_move = true;
+
+         PieceColor myc = get_piece_color(b, from);
+
          const int bb = get_pieceBB_index(b, from);
          unsetbit(b->piecesBB[bb], from);
+         if (get_piece_color(b, to) == opposite_color(myc)) {
+            unsetbit(b->piecesBB[get_pieceBB_index(b, to)], to);
+         }
          setbit(b->piecesBB[bb], to);
          save_move(b, from, to);
 
-         b->color_to_play = opposite_color(b->color_to_play);
+         b->color_to_play = opposite_color(myc);
          gen_board_legal_moves(b);
       }
+   }
+   if (!valid_move) {
+      printf("Invalide move.");
    }
 }
