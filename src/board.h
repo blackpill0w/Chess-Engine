@@ -36,9 +36,9 @@ typedef struct {
 /*!
   Default constructor, initialize an empty board.
 */
-Board *newBoard();
+Board *new_board(char FEN[]);
 
-void freeBoard(Board *b);
+void free_board(Board *b);
 
 /*!
   TODO

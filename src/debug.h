@@ -5,9 +5,7 @@
 #include "./board.h"
 #include "./bitopt.h"
 
-static void print_color(PieceColor c) {
-   printf("%s\n", (c == White ? "White" : c == Black ? "Black" : "NoColor"));
-}
+#define str_piece_color(c) (c == White ? "White" : c == Black ? "Black" : "NoColor")
 
 static void print_bb(Bitboard bb) {
    for (int i=7; i >= 0; --i) {

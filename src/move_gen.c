@@ -120,11 +120,11 @@ void gen_piece_moves(Board *b, const Square s) {
 }
 
 void gen_board_legal_moves(Board *b) {
-   for (int j = 0; j < PiecesLen; ++j) {
-      for (int k = 0; k < 64; ++k) {
-         if (isbitset(b->piecesBB[j], k) && get_piece_color(b, k) == b->color_to_play) {
-             gen_piece_moves(b, (Square) k);
-         }
+   for (int k = 0; k < 64; ++k) {
+      // no need to check if bit is set because `get_piece_color()` returns
+      // `NoColor` if square is empty.
+      if (get_piece_color(b, k) == b->color_to_play) {
+         gen_piece_moves(b, k);
       }
    }
 }

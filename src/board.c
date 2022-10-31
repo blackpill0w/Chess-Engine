@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 
-Board *newBoard() {
+Board *new_board(char FEN[]) {
    Board *b = malloc(sizeof(Board));
 
    b->color_to_play = White;
@@ -20,12 +20,13 @@ Board *newBoard() {
    vec_init(b->movelist);
    vec_reserve(b->movelist, 128);
 
+   load_fen(b, FEN);
    gen_board_legal_moves(b);
 
    return b;
 }
 
-void freeBoard(Board *b) {
+void free_board(Board *b) {
    vec_free(b->move_history);
    vec_free(b->movelist);
    free(b);
