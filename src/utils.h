@@ -73,37 +73,33 @@ typedef enum {
    NoSquare
 } Square;
 
-#ifdef CHESS_DEBUG
-
-static char *str_square(const Square s) {
-   static char str[] = "No Square";
-   if (s != NoSquare) {
-      str[0] = 'A' + int(s%8);
-      str[1] = '1' + int(s/8);
-      str[2] = 0;
-   }
-   return str;
-}
-
-#endif // CHESS_DEBUG
-
 /*
   bit 0-5: the origin square
   bit 6-11: the target square
   bit 12-13: promotion type
   bit 14-15: special move flag: promotion (1), en passant (2), castling (3)
 */
-typedef uint16_t Move;
+typedef uint16_t MoveData;
+#define md_from_mask            63
+#define md_to_mask              (63 << 6)
+#define md_promotion_type_mask  (3 << 12)
+#define md_move_type_mask       (3 << 14)
 
 typedef enum {
    Normal,
-   Promotion = 1 << 14,
+   Promotion  = 1 << 14,
    En_passant = 2 << 14,
-   Castling = 3 << 14
+   Castling   = 3 << 14
 } MoveType;
 
-static Move new_move(const Square from, const Square to,
-                     const MoveType mt,
-                     const PieceType pt) { // promotion type
-   return mt | (pt << 12) | (to << 6) | from;
-}
+/*!
+  @param from: the origin `Square`
+  @param to: the destination `Square`
+  @param mt: MoveType
+  @param pt: (PieceType) promotion type; type of piece to promote to
+*/
+#define new_md(from, to, pt, mt)   ((mt) | ((pt) << 12) | ((to) << 6) | (from))
+#define md_get_square_from(m)      (m & md_from_mask)
+#define md_get_square_to(m)        ((m & md_to_mask) >> 6)
+#define md_get_move_type(m)        (m & md_move_type_mask)
+#define md_get_promotion_type(m)   ((m & md_promotion_type_mask) >> 12)

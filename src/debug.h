@@ -1,9 +1,23 @@
 #pragma once
 
 #include <stdio.h>
+#include <string.h>
 
 #include "./board.h"
 #include "./bitopt.h"
+
+static char *str_square(const Square s) {
+   static char str[] = "No Square";
+   if (s == NoSquare) {
+      strcpy(str, "No Square");
+   }
+   else {
+      str[0] = 'A' + (s%8);
+      str[1] = '1' + (s/8);
+      str[2] = 0;
+   }
+   return str;
+}
 
 static void print_bb(Bitboard bb) {
    for (int i=7; i >= 0; --i) {

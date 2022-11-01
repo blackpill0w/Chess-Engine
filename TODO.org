@@ -1,0 +1,8 @@
+* Move generation
+** DONE take piece when en passant is played
+** TODO castling
+** TODO checks
+** TODO pins
+
+* Search & Eval
+** ??

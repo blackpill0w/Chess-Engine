@@ -91,7 +91,7 @@ Bitboard gen_king_moves(Board *b, const Square s) {
    return res & ~(myc == White ? b->black_attacked : b->white_attacked);
 }
 
-void gen_piece_moves(Board *b, const Square s) {
+PieceMoves gen_piece_moves(Board *b, const Square s) {
    const PieceType pt = get_piece_type(b, s);
    PieceMoves pm = { .piece_pos = s, .possible_moves = 0 };
    if (pt == Queen || pt == Rook || pt == Bishop) {
@@ -116,15 +116,17 @@ void gen_piece_moves(Board *b, const Square s) {
          pm.possible_moves |= gen_pawn_push(b, s);
       }
    }
-   vec_push(b->movelist, pm);
+   return pm;
 }
 
 void gen_board_legal_moves(Board *b) {
+   vec_clear(b->movelist);
+
    for (int k = 0; k < 64; ++k) {
       // no need to check if bit is set because `get_piece_color()` returns
-      // `NoColor` if square is empty.
+      // `NoColor` if the square is empty.
       if (get_piece_color(b, k) == b->color_to_play) {
-         gen_piece_moves(b, k);
+         vec_push(b->movelist, gen_piece_moves(b, k));
       }
    }
 }

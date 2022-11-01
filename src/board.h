@@ -6,13 +6,14 @@
 #include "./vec.h"
 #include "./utils.h"
 
-vec_typedef(Move, Move);
+vec_typedef(MoveData, MoveData);
 arr_typedef(Bitboard, Bitboard);
 
-static const unsigned WP_START = 0;
-static const unsigned WP_END = 5;
-static const unsigned BP_START = 6;
-static const unsigned BP_END = 11;
+// useful indices
+#define WP_START   0
+#define WP_END     5
+#define BP_START   6
+#define BP_END     11
 
 // enum to access pieces' positions
 enum { WK, WQ, WR, WB, WN, WP, BK, BQ, BR, BB, BN, BP, PiecesLen }; // pieces_len = 12
@@ -29,7 +30,7 @@ typedef struct {
    PieceColor color_to_play;
    Bitboard white_attacked;
    Bitboard black_attacked;
-   vecMove move_history;
+   vecMoveData move_history;
    vecPieceMoves movelist;
 } Board;
 
@@ -91,6 +92,9 @@ PieceColor get_piece_color(Board *b, const Square s);
 */
 bool ispos_occupied(Board *b, const Square s);
 
+//! Remove a piece from the board.
+void remove_piece_at(Board *b, const Square s);
+
 /*!
   Generate (pseudo-legal) moves of sliding pieces (queen, rook and bishop).
   @param s: the position of the piece to be tested.
@@ -142,10 +146,10 @@ Bitboard gen_pawn_attacks(Board *b, const Square s);
 
 /*!
   Generate all possible moves of a piece.
-  The result is a `Bitboard` that is put in `movelist`.
+  The result is a `PieceMoves` struct.
   It is just a wrapper for `gen_knight_moves()` and other similar functions.
 */
-void gen_piece_moves(Board *b, const Square s);
+PieceMoves gen_piece_moves(Board *b, const Square s);
 
 /*!
   Generate all legal moves at a given position, the result is stored

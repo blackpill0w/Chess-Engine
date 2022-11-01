@@ -48,24 +48,12 @@ PieceType get_piece_type(Board *b, const Square s) {
    PieceType t = NoType;
    for (unsigned i = 0; i < PiecesLen; ++i) {
       if ((1ull << s) & b->piecesBB[i]) {
-         if (i == WK || i == BK) {
-            t = King;
-         }
-         else if (i == WQ || i == BQ) {
-            t = Queen;
-         }
-         else if (i == WR || i == BR) {
-            t = Rook;
-         }
-         else if (i == WB || i == BB) {
-            t = Bishop;
-         }
-         else if (i == WN || i == BN) {
-            t = Knight;
-         }
-         else if (i == WP || i == BP) {
-            t = Pawn;
-         }
+         t = (i == WK || i == BK) ? King
+            : (i == WQ || i == BQ) ? Queen
+            : (i == WR || i == BR) ? Rook
+            : (i == WB || i == BB) ? Bishop
+            : (i == WN || i == BN) ? Knight
+            : Pawn;
          break;
       }
    }
@@ -90,24 +78,26 @@ bool ispos_occupied(Board *b, const Square s) {
    return ((1ull << s) & all_pieces(b)) != 0;
 }
 
-void save_move(Board *b, const Square from, const Square to) {
+void remove_piece_at(Board *b, const Square s) {
+   unsetbit(b->piecesBB[get_pieceBB_index(b, s)], s);
+}
+
+MoveData gen_move_data(Board *b, const Square from, const Square to) {
    MoveType mt = Normal;
    PieceType pt = get_piece_type(b, from);
-   if (b->enpassant_square != NoSquare) {
-      b->enpassant_square = NoSquare;
-   }
    if (pt == Pawn) {
-      if (abs(to - from) == 8*2) {
-         mt = En_passant;
-         b->enpassant_square = to - 8*pawn_direction(get_piece_color(b, from));
-      }
-      else if (to <= H1 || to >= A8) {
+      if (to <= H1 || to >= A8) {
          mt = Promotion;
       }
-   } else if (pt == King && abs(to - from) == 2) {
+      else if (to == b->enpassant_square) {
+         mt = En_passant;
+      }
+   }
+   else if (pt == King && abs(to - from) == 2) {
       mt = Castling;
    }
-   vec_push(b->move_history, new_move(from, to, mt, Queen) );
+   MoveData md = new_md(from, to, Queen, mt);
+   return md;
 }
 
 void move(Board *b, const Square from, const Square to) {
@@ -119,20 +109,32 @@ void move(Board *b, const Square from, const Square to) {
          valid_move = true;
 
          PieceColor myc = get_piece_color(b, from);
+         MoveData md    = gen_move_data(b, from, to);
+         b->enpassant_square = NoSquare;
 
          const int bb = get_pieceBB_index(b, from);
-         unsetbit(b->piecesBB[bb], from);
+         // check if we should take a piece
          if (get_piece_color(b, to) == opposite_color(myc)) {
-            unsetbit(b->piecesBB[get_pieceBB_index(b, to)], to);
+            remove_piece_at(b, to);
          }
+         else if (md_get_move_type(md) == En_passant) { // take if en passant
+            remove_piece_at(b, to - 8*pawn_direction(myc));
+         }
+         else if (get_piece_type(b, from) == Pawn && abs(from - to) == 8*2) {
+            printf("---- Setting en passant\n");
+            b->enpassant_square = from + 8*pawn_direction(myc);
+         }
+
+         remove_piece_at(b, from);
          setbit(b->piecesBB[bb], to);
-         save_move(b, from, to);
+
+         vec_push(b->move_history, md);
 
          b->color_to_play = opposite_color(myc);
          gen_board_legal_moves(b);
       }
    }
    if (!valid_move) {
-      printf("Invalide move.");
+      printf(" -- Invalid move.\n\n");
    }
 }
