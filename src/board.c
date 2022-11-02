@@ -100,7 +100,7 @@ MoveData gen_move_data(Board *b, const Square from, const Square to) {
    return new_md(from, to, Queen, mt);
 }
 
-static void handle_castling_rights(Board *b, PieceColor myc, Square from, Square to) {
+static void handle_castling_rights_changes(Board *b, PieceColor myc, Square from, Square to) {
    if (get_piece_type(b, from) == King) {
       b->cr &= ~(myc == White ? WhiteCastling : BlackCastling);
    }
@@ -112,6 +112,12 @@ static void handle_castling_rights(Board *b, PieceColor myc, Square from, Square
          b->cr &= ~(myc == White ? White_OOO : Black_OOO);
       }
    }
+}
+
+static void change_piece_pos(Board *b, Square from, Square to) {
+   int i = get_pieceBB_index(b, from);
+   unsetbit(b->piecesBB[i], from);
+   setbit(b->piecesBB[i], to);
 }
 
 void make_move(Board *b, const Square from, const Square to) {
@@ -126,7 +132,6 @@ void make_move(Board *b, const Square from, const Square to) {
          MoveData md    = gen_move_data(b, from, to);
          b->enpassant_square = NoSquare;
 
-         const int bb = get_pieceBB_index(b, from);
          // check if we should take a piece
          if (get_piece_color(b, to) == opposite_color(myc)) {
             remove_piece_at(b, to);
@@ -139,19 +144,15 @@ void make_move(Board *b, const Square from, const Square to) {
          }
          else if (md_get_move_type(md) == Castling) { // take if en passant
             if (from < to) { // king side
-               unsetbit(b->piecesBB[myc == White ? WR : BR], to + 1);
-               setbit(b->piecesBB[myc == White ? WR : BR], to - 1);
+               change_piece_pos(b, to + 1, to - 1);
             }
             else { // queen side
-               unsetbit(b->piecesBB[myc == White ? WR : BR], to - 2);
-               setbit(b->piecesBB[myc == White ? WR : BR], to + 1);
+               change_piece_pos(b, to - 2, to + 1);
             }
          }
-         handle_castling_rights(b, myc, from, to);
+         handle_castling_rights_changes(b, myc, from, to);
 
-         remove_piece_at(b, from);
-         setbit(b->piecesBB[bb], to);
-
+         change_piece_pos(b, from, to);
          vec_push(b->move_history, md);
 
          b->color_to_play = opposite_color(myc);
