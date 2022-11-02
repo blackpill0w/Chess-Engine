@@ -13,6 +13,7 @@ Board *new_board(char FEN[]) {
    b->white_attacked = 0;
    b->black_attacked = 0;
    b->enpassant_square = NoSquare;
+   b->cr = AnyCastling;
    memset(b->piecesBB, 0, PiecesLen*sizeof(b->piecesBB[0]));
 
    vec_init(b->move_history);
@@ -93,18 +94,31 @@ MoveData gen_move_data(Board *b, const Square from, const Square to) {
          mt = En_passant;
       }
    }
-   else if (pt == King && abs(to - from) == 2) {
+   else if (pt == King && abs((int) (to - from)) == 2) {
       mt = Castling;
    }
-   MoveData md = new_md(from, to, Queen, mt);
-   return md;
+   return new_md(from, to, Queen, mt);
 }
 
-void move(Board *b, const Square from, const Square to) {
+static void handle_castling_rights(Board *b, PieceColor myc, Square from, Square to) {
+   if (get_piece_type(b, from) == King) {
+      b->cr &= ~(myc == White ? WhiteCastling : BlackCastling);
+   }
+   else if (get_piece_type(b, from) == Rook) {
+      if ((1ull << from) & fileH) {
+         b->cr &= ~(myc == White ? White_OO : Black_OO);
+      }
+      else if ((1ull << from) & fileA) {
+         b->cr &= ~(myc == White ? White_OOO : Black_OOO);
+      }
+   }
+}
+
+void make_move(Board *b, const Square from, const Square to) {
    bool valid_move = false;
    for (int i = 0; i < vec_len(b->movelist); ++i) {
       if (vec_at(b->movelist, i).piece_pos == from
-          && (vec_at(b->movelist, i).piece_pos & to)
+          && (vec_at(b->movelist, i).possible_moves & (1ull << to))
       ) {
          valid_move = true;
 
@@ -120,10 +134,20 @@ void move(Board *b, const Square from, const Square to) {
          else if (md_get_move_type(md) == En_passant) { // take if en passant
             remove_piece_at(b, to - 8*pawn_direction(myc));
          }
-         else if (get_piece_type(b, from) == Pawn && abs(from - to) == 8*2) {
-            printf("---- Setting en passant\n");
+         else if (get_piece_type(b, from) == Pawn && abs((int) (from - to)) == 8*2) {
             b->enpassant_square = from + 8*pawn_direction(myc);
          }
+         else if (md_get_move_type(md) == Castling) { // take if en passant
+            if (from < to) { // king side
+               unsetbit(b->piecesBB[myc == White ? WR : BR], to + 1);
+               setbit(b->piecesBB[myc == White ? WR : BR], to - 1);
+            }
+            else { // queen side
+               unsetbit(b->piecesBB[myc == White ? WR : BR], to - 2);
+               setbit(b->piecesBB[myc == White ? WR : BR], to + 1);
+            }
+         }
+         handle_castling_rights(b, myc, from, to);
 
          remove_piece_at(b, from);
          setbit(b->piecesBB[bb], to);
@@ -132,6 +156,8 @@ void move(Board *b, const Square from, const Square to) {
 
          b->color_to_play = opposite_color(myc);
          gen_board_legal_moves(b);
+
+         break;
       }
    }
    if (!valid_move) {

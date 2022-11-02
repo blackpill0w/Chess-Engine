@@ -5,11 +5,6 @@
 #include <regex.h>
 #include <ctype.h>
 
-// enum to access tokens
-enum { PiecesPos, ColorToPlay,
-       CastlingRights, EnPassantPos,
-       FiftyMoveRule, HundredMoveRule };
-
 static void fen_add_pieces(Board *b, const char *fen_pieces);
 
 void load_fen(Board *b, char FEN[]) {

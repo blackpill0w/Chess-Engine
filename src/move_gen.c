@@ -4,6 +4,7 @@
 #include "./bitopt.h"
 
 #include <stdlib.h>
+#include <stdbool.h>
 
 // When iterating through directions, if (1ull << target_square) & corresponding_mask != 0,
 // it means the target_square is in the edge of the board
@@ -86,6 +87,27 @@ Bitboard gen_king_moves(Board *b, const Square s) {
       const Square target = s + DIR[i] ;
       if (get_piece_color(b, target) != myc) {
          res |= 1ull << target;
+      }
+   }
+
+   const Bitboard attacked = (myc == White ? b->black_attacked : b->white_attacked);
+   const Bitboard KSCastlingSquaresBB = (myc == White ? WKSCastlingSquaresBB : BKSCastlingSquaresBB);
+   const Bitboard QSCastlingSquaresBB = (myc == White ? WQSCastlingSquaresBB : BQSCastlingSquaresBB);
+
+   // King side castling
+   if (b->cr & (myc == White ? White_OO : Black_OO)) {
+      if (!(all_pieces(b) & KSCastlingSquaresBB)
+          && !(KSCastlingSquaresBB & attacked)
+         ) {
+         res |= (1ull << (s + 2));
+      }
+   }
+   // Queen side castling
+   if (b->cr & (myc == White ? White_OOO : Black_OOO)) {
+      if (!(all_pieces(b) & QSCastlingSquaresBB)
+          && !(QSCastlingSquaresBB & attacked)
+         ) {
+         res |= (1ull << (s - 2));
       }
    }
    return res & ~(myc == White ? b->black_attacked : b->white_attacked);

@@ -1,6 +1,6 @@
 * Move generation
 ** DONE take piece when en passant is played
-** TODO castling
+** DONE castling
 ** TODO checks
 ** TODO pins
 

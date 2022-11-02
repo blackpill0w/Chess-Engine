@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-static const unsigned invalid_index = 99999999;
+#define invalid_index 999999999
 
 typedef uint64_t Bitboard;
 typedef uint64_t PiecePos;
@@ -14,23 +14,23 @@ typedef enum {NoColor, White, Black} PieceColor;
 
 typedef enum { Knight, Bishop, Rook, Queen, King, Pawn, NoType } PieceType;
 
-static const Bitboard fileA = 0x0101010101010101;
-static const Bitboard fileB = 0x0202020202020202;
-static const Bitboard fileC = 0x0404040404040404;
-static const Bitboard fileD = 0x0808080808080808;
-static const Bitboard fileE = 0x1010101010101010;
-static const Bitboard fileF = 0x2020202020202020;
-static const Bitboard fileG = 0x4040404040404040;
-static const Bitboard fileH = 0x8080808080808080;
+#define fileA 0x0101010101010101
+#define fileB 0x0202020202020202
+#define fileC 0x0404040404040404
+#define fileD 0x0808080808080808
+#define fileE 0x1010101010101010
+#define fileF 0x2020202020202020
+#define fileG 0x4040404040404040
+#define fileH 0x8080808080808080
 
-static const Bitboard rank1 = 255ull;
-static const Bitboard rank2 = 255ull << 8;
-static const Bitboard rank3 = 255ull << 16;
-static const Bitboard rank4 = 255ull << 24;
-static const Bitboard rank5 = 255ull << 32;
-static const Bitboard rank6 = 255ull << 40;
-static const Bitboard rank7 = 255ull << 48;
-static const Bitboard rank8 = 255ull << 56;
+#define rank1 (255ull)
+#define rank2 (255ull << 8)
+#define rank3 (255ull << 16)
+#define rank4 (255ull << 24)
+#define rank5 (255ull << 32)
+#define rank6 (255ull << 40)
+#define rank7 (255ull << 48)
+#define rank8 (255ull << 56)
 
 typedef enum {
    North,
@@ -56,10 +56,10 @@ static const int DIR[8] = {
    -9,
 };
 
-static const unsigned ROOK_DIR_START = 0;
-static const unsigned ROOK_DIR_END = 3;
-static const unsigned BISHOP_DIR_START = 4;
-static const unsigned BISHOP_DIR_END = 7;
+#define ROOK_DIR_START    0
+#define ROOK_DIR_END      3
+#define BISHOP_DIR_START  4
+#define BISHOP_DIR_END    7
 
 typedef enum {
    A1, B1, C1, D1, E1, F1, G1, H1,
@@ -103,3 +103,22 @@ typedef enum {
 #define md_get_square_to(m)        ((m & md_to_mask) >> 6)
 #define md_get_move_type(m)        (m & md_move_type_mask)
 #define md_get_promotion_type(m)   ((m & md_promotion_type_mask) >> 12)
+
+typedef char CastlingRights;
+enum {
+   NoCastling,
+   White_OO,
+   Black_OO       = 1 << 1,
+   White_OOO      = 1 << 2,
+   Black_OOO      = 1 << 3,
+   KingSide      = White_OO  | Black_OO,
+   QueenSide     = White_OOO | Black_OOO,
+   WhiteCastling = White_OO  | White_OOO,
+   BlackCastling = Black_OO  | Black_OOO,
+   AnyCastling   = WhiteCastling | BlackCastling,
+};
+
+#define WKSCastlingSquaresBB (1ull << F1 | 1ull << G1)
+#define BKSCastlingSquaresBB (1ull << F8 | 1ull << G8)
+#define WQSCastlingSquaresBB (1ull << C1 | 1ull << D1)
+#define BQSCastlingSquaresBB (1ull << C8 | 1ull << D8)

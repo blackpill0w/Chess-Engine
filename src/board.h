@@ -28,15 +28,16 @@ typedef struct {
    Bitboard piecesBB[PiecesLen]; // Pieces' bitboards
    Square enpassant_square;
    PieceColor color_to_play;
-   Bitboard white_attacked;
-   Bitboard black_attacked;
    vecMoveData move_history;
    vecPieceMoves movelist;
+   CastlingRights cr;
+   Bitboard white_attacked;
+   Bitboard black_attacked;
 } Board;
 
 /*!
   Default constructor.
-  @param FEN: an (modifiable) array of characters that contains a FEN notation string.
+  @param FEN: a modifiable array of characters that contains a FEN notation string.
   WARNING: the FEN string MUST be valid, otherwise, the engine aborts.
 
   @return a pointer to a `Board` object.
@@ -49,7 +50,7 @@ void free_board(Board *b);
 /*!
   Load a FEN string into a board and generate legal moves.
   @param b: a pointer to a `Board` object.
-  @parab FEN: an (modifiable) array of characters that contains a FEN notation string.
+  @parab FEN: a modifiable array of characters that contains a FEN notation string.
 */
 void load_fen(Board *b, char FEN[]);
 
@@ -166,4 +167,4 @@ void save_move(Board *b, const Square from, const Square to);
 /*!
   TODO
 */
-void move(Board *b, const Square from, const Square to);
+void make_move(Board *b, const Square from, const Square to);

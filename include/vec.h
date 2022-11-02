@@ -57,13 +57,13 @@
             (vec).v,                                        \
             ((vec)._capacity *= 2) * sizeof( *((vec).v) )   \
          );                                                 \
-         if (vec.v == NULL) _vec_memory_allocation_err();    \
+         if (vec.v == NULL) _vec_memory_allocation_err();   \
       }                                                     \
       (vec).v[(vec)._len++] = item;                         \
    }
 
 //! Remove the last item, and return it.
-#define vec_pop(vec) ((vec)._len == 0) ? _vec_pop_empty_vec_err() : (vec).v[ --((vec)._len) ]
+#define vec_pop(vec) (vec).v[(vec)._len == 0) ? _vec_pop_empty_vec_err() : --((vec)._len) ]
 
 //! Empty the vector.
 #define vec_clear(vec) ((vec)._len = 0)
