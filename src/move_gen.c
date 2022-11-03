@@ -126,11 +126,11 @@ PieceMoves gen_piece_moves(Board *b, const Square s) {
       pm.possible_moves = gen_king_moves(b, s);
    }
    else if (pt == Pawn) {
-      const PieceColor pc = get_piece_color(b, s);
+      const PieceColor myc = get_piece_color(b, s);
       pm.possible_moves = gen_pawn_attacks(b, s);
 
-      if ((pc == White && (s & rank2))
-          || (pc == Black && (s & rank7))
+      if ((myc == White && ((1ull << s) & rank2))
+          || (myc == Black && ((1ull << s) & rank7))
          ) {
          pm.possible_moves |= gen_double_push(b, s);
       }

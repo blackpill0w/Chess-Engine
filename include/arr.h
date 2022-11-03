@@ -32,9 +32,9 @@
   Set size of the array and initialize elements to 0.
 */
 #define arr_init(arr, size)                        \
-   arr._len = size;                                \
-   arr.a = calloc(size, sizeof( *((arr).a) ));     \
-   if (arr.a == NULL) _arr_memory_allocation_err()
+   (arr)._len = size;                                \
+   (arr).a = calloc(size, sizeof( *((arr).a) ));     \
+   if ((arr).a == NULL) _arr_memory_allocation_err()
 
 /*!
   Free allocated resources.

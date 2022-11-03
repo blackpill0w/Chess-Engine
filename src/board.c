@@ -8,7 +8,9 @@
 
 Board *new_board(char FEN[]) {
    Board *b = malloc(sizeof(Board));
-
+   if (b == NULL) {
+      return NULL;
+   }
    b->color_to_play = White;
    b->white_attacked = 0;
    b->black_attacked = 0;
@@ -120,13 +122,14 @@ static void change_piece_pos(Board *b, Square from, Square to) {
    setbit(b->piecesBB[i], to);
 }
 
-void make_move(Board *b, const Square from, const Square to) {
-   bool valid_move = false;
+int make_move(Board *b, const Square from, const Square to) {
+   // 0 on success, -1 if move is invalid
+   int err = -1;
    for (int i = 0; i < vec_len(b->movelist); ++i) {
       if (vec_at(b->movelist, i).piece_pos == from
           && (vec_at(b->movelist, i).possible_moves & (1ull << to))
       ) {
-         valid_move = true;
+         err = 0;
 
          PieceColor myc = get_piece_color(b, from);
          MoveData md    = gen_move_data(b, from, to);
@@ -158,10 +161,11 @@ void make_move(Board *b, const Square from, const Square to) {
          b->color_to_play = opposite_color(myc);
          gen_board_legal_moves(b);
 
-         break;
+         return 0;
       }
    }
-   if (!valid_move) {
+   if (err) {
       printf(" -- Invalid move.\n\n");
    }
+   return err;
 }

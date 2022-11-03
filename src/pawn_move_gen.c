@@ -1,11 +1,9 @@
 #include "./utils.h"
 #include "./board.h"
+#include "./debug.h"
 
 Bitboard gen_pawn_push(Board *b, const Square s) {
    const PieceColor myc = get_piece_color(b, s);
-   if (myc == NoColor) {
-      return 0;
-   }
    Square pushpos = s + 8*pawn_direction(myc);
    if (pushpos < 0 || pushpos > 63 || ispos_occupied(b, pushpos)) {
       return 0;
@@ -18,7 +16,10 @@ Bitboard gen_double_push(Board *b, const Square s) {
    const PieceColor myc = get_piece_color(b, s);
    res |= gen_pawn_push(b, s);
    if (res != 0) {
-      res |= gen_pawn_push(b, s + 8*pawn_direction(myc));
+      Square pushpos = s + 16*pawn_direction(myc);
+      if (pushpos >= 0 && pushpos <= 63 && !ispos_occupied(b, pushpos)) {
+         res |= (1ull << pushpos);
+      }
    }
    return res;
 }

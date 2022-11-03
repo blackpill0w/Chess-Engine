@@ -35,12 +35,14 @@ typedef struct {
    Bitboard black_attacked;
 } Board;
 
+#define STANDARD_CHESS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
 /*!
   Default constructor.
   @param FEN: a modifiable array of characters that contains a FEN notation string.
   WARNING: the FEN string MUST be valid, otherwise, the engine aborts.
 
-  @return a pointer to a `Board` object.
+  @return a pointer to a `Board` object and NULL on error.
 */
 Board *new_board(char FEN[]);
 
@@ -165,6 +167,7 @@ void gen_board_legal_moves(Board *b);
 void save_move(Board *b, const Square from, const Square to);
 
 /*!
-  TODO
+  Make a move.
+  @return 0 on success, -1 if move is invalid.
 */
-void make_move(Board *b, const Square from, const Square to);
+int make_move(Board *b, const Square from, const Square to);

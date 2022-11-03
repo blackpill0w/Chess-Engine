@@ -32,7 +32,7 @@
 #define vec_init(vec) memset(&(vec), 0, sizeof(vec));   \
    (vec)._capacity = 1;                                 \
    (vec).v = malloc(sizeof( *((vec).v) ));              \
-   if (vec.v == NULL) _vec_memory_allocation_err()
+   if ((vec).v == NULL) _vec_memory_allocation_err()
 
 //! Free allocated resources.
 #define vec_free(vec) free((vec).v)
@@ -47,7 +47,7 @@
 #define vec_isempty(vec) ((vec)._len == 0)
 
 //! Get an item from the vector using an index, abort if the index is out of bound.
-#define vec_at(vec, i) vec.v[ (i) >= vec._len ? _vec_out_of_bound_err() : (i) ]
+#define vec_at(vec, i) (vec).v[ (i) >= (vec)._len ? _vec_out_of_bound_err() : (i) ]
 
 //! Insert an item into the vector.
 #define vec_push(vec, item)                                 \
@@ -57,7 +57,7 @@
             (vec).v,                                        \
             ((vec)._capacity *= 2) * sizeof( *((vec).v) )   \
          );                                                 \
-         if (vec.v == NULL) _vec_memory_allocation_err();   \
+         if ((vec).v == NULL) _vec_memory_allocation_err(); \
       }                                                     \
       (vec).v[(vec)._len++] = item;                         \
    }
@@ -75,7 +75,7 @@
 #define vec_reserve(vec, n)                                    \
    if ((vec)._capacity < n) {                                  \
       (vec).v = realloc((vec).v, n * sizeof((vec).v[0]) );     \
-      if (vec.v == NULL) _vec_memory_allocation_err();          \
+      if ((vec).v == NULL) _vec_memory_allocation_err();       \
       (vec)._capacity = n;                                     \
    }                                                           \
 
