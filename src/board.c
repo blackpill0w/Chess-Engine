@@ -73,7 +73,7 @@ unsigned get_pieceBB_index(Board *b, const Square s) {
 
 PieceColor get_piece_color(Board *b, const Square s) {
    const unsigned res = get_pieceBB_index(b, s);
-   return res <= WP_END ? White : res <= BP_END ? Black : NoColor;
+   return res <= wp_end ? White : res <= bp_end ? Black : NoColor;
 }
 
 bool ispos_occupied(Board *b, const Square s) {

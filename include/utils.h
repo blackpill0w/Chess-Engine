@@ -7,7 +7,7 @@
 typedef uint64_t Bitboard;
 typedef uint64_t PiecePos;
 
-typedef enum {NoColor, White, Black} PieceColor;
+typedef enum { NoColor, White, Black } PieceColor;
 #define opposite_color(c) (c == White ? Black : c == Black ? White : NoColor)
 #define str_piece_color(c) (c == White ? "White" : c == Black ? "Black" : "NoColor")
 #define pawn_direction(c) (c == White ? 1 : -1)
@@ -43,7 +43,7 @@ typedef enum {
    SoWe,
 } Direction;
 
-static const int DIR[8] = {
+static const int dir[8] = {
    // Rook directions
    8,
    -8,
@@ -56,10 +56,10 @@ static const int DIR[8] = {
    -9,
 };
 
-#define ROOK_DIR_START    0
-#define ROOK_DIR_END      3
-#define BISHOP_DIR_START  4
-#define BISHOP_DIR_END    7
+#define rook_dir_start    0
+#define rook_dir_end      3
+#define bishop_dir_start  4
+#define bishop_dir_end    7
 
 typedef enum {
    A1, B1, C1, D1, E1, F1, G1, H1,

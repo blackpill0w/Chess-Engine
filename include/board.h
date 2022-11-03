@@ -10,10 +10,10 @@ vec_typedef(MoveData, MoveData);
 arr_typedef(Bitboard, Bitboard);
 
 // useful indices
-#define WP_START   0
-#define WP_END     5
-#define BP_START   6
-#define BP_END     11
+#define wp_start   0
+#define wp_end     5
+#define bp_start   6
+#define bp_end     11
 
 // enum to access pieces' positions
 enum { WK, WQ, WR, WB, WN, WP, BK, BQ, BR, BB, BN, BP, PiecesLen }; // pieces_len = 12
@@ -34,7 +34,7 @@ typedef struct {
    Bitboard attacked_by_enemy;
 } Board;
 
-#define STANDARD_CHESS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define standard_chess "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 /*!
   Default constructor.
