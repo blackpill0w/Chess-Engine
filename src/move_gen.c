@@ -37,7 +37,7 @@ static const Bitboard KNIGHT_MOVES_CORRESPONDING_MASK[8] = {
    ~(rank8 | rank7 | fileH),
 };
 
-Bitboard gen_sliding_piece_moves(Board *b, const Square s, const PieceType t) {
+Bitboard gen_sliding_piece_moves(Board *b, const Square s, const PieceType t, const bool gen_attacked_by_enemy) {
    Bitboard res = 0;
    const PieceColor myc = get_piece_color(b, s);
    const unsigned start = (t == Bishop) ? BISHOP_DIR_START : ROOK_DIR_START;
@@ -50,7 +50,7 @@ Bitboard gen_sliding_piece_moves(Board *b, const Square s, const PieceType t) {
       while (pos >= 0 && pos < 64) {
          const PieceColor enemyc = get_piece_color(b, pos);
          if (enemyc != NoColor) {
-            if (enemyc == opposite_color(myc)) {
+            if (enemyc == opposite_color(myc) || gen_attacked_by_enemy) {
                res |= (1ull << pos);
             }
             break;
@@ -65,19 +65,19 @@ Bitboard gen_sliding_piece_moves(Board *b, const Square s, const PieceType t) {
    return res;
 }
 
-Bitboard gen_knight_moves(Board *b, const Square s) {
+Bitboard gen_knight_moves(Board *b, const Square s, const bool gen_attacked_by_enemy) {
    Bitboard res = 0;
    const PieceColor myc = get_piece_color(b, s);
    for (int i = 0; i < 8; ++i) {
       const Square target = s + KNIGHT_MOVES[i];
-      if (get_piece_color(b, target) != myc) {
+      if (get_piece_color(b, target) != myc || gen_attacked_by_enemy) {
          res |= (1ull << target) & KNIGHT_MOVES_CORRESPONDING_MASK[i];
       }
    }
    return res;
 }
 
-Bitboard gen_king_moves(Board *b, const Square s) {
+Bitboard gen_king_moves(Board *b, const Square s, const bool gen_attacked_by_enemy) {
    Bitboard res = 0;
    const PieceColor myc = get_piece_color(b, s);
    for (int i = 0; i < 8; ++i) {
@@ -85,7 +85,7 @@ Bitboard gen_king_moves(Board *b, const Square s) {
          continue;
       }
       const Square target = s + DIR[i] ;
-      if (get_piece_color(b, target) != myc) {
+      if (get_piece_color(b, target) != myc || gen_attacked_by_enemy) {
          res |= 1ull << target;
       }
    }
@@ -109,24 +109,24 @@ Bitboard gen_king_moves(Board *b, const Square s) {
          res |= (1ull << (s - 2));
       }
    }
-   return res & ~(b->attacked_by_enemy);
+   return gen_attacked_by_enemy == true ? res : res & b->attacked_by_enemy;
 }
 
-Bitboard gen_piece_moves(Board *b, const Square s) {
+Bitboard gen_piece_moves(Board *b, const Square s, const bool gen_attacked_by_enemy) {
    Bitboard res = 0;
    PieceType pt = get_piece_type(b, s);
    if (pt == Queen || pt == Rook || pt == Bishop) {
-      res = gen_sliding_piece_moves(b, s, pt);
+      res = gen_sliding_piece_moves(b, s, pt, gen_attacked_by_enemy);
    }
    else if (pt == Knight) {
-      res = gen_knight_moves(b, s);
+      res = gen_knight_moves(b, s, gen_attacked_by_enemy);
    }
    else if (pt == King) {
-      res = gen_king_moves(b, s);
+      res = gen_king_moves(b, s, gen_attacked_by_enemy);
    }
    else if (pt == Pawn) {
       const PieceColor myc = get_piece_color(b, s);
-      res = gen_pawn_attacks(b, s);
+      res = gen_pawn_attacks(b, s, gen_attacked_by_enemy);
 
       if ((myc == White && ((1ull << s) & rank2))
           || (myc == Black && ((1ull << s) & rank7))
@@ -148,12 +148,12 @@ void gen_board_legal_moves(Board *b) {
       // no need to check if bit is set because `get_piece_color()` returns
       // `NoColor` if the square is empty.
       if (get_piece_color(b, i) == opposite_color(b->color_to_play)) {
-         b->attacked_by_enemy |= gen_piece_moves(b, i);
+         b->attacked_by_enemy |= gen_piece_moves(b, i, true);
       }
    }
    for (int i = 0; i < 64; ++i) {
       if (get_piece_color(b, i) == b->color_to_play) {
-         PieceMoves pm = { .piece_pos = i, .possible_moves = gen_piece_moves(b, i) };
+         PieceMoves pm = { .piece_pos = i, .possible_moves = gen_piece_moves(b, i, false) };
          vec_push(b->movelist, pm);
       }
    }

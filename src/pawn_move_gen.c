@@ -24,7 +24,7 @@ Bitboard gen_double_push(Board *b, const Square s) {
    return res;
 }
 
-Bitboard gen_pawn_attacks(Board *b, const Square s) {
+Bitboard gen_pawn_attacks(Board *b, const Square s, const bool gen_attacked_by_enemy) {
    Bitboard res = 0;
    const PieceColor myc = get_piece_color(b, s);
    const int targets[2] = {9, 7};
@@ -34,7 +34,9 @@ Bitboard gen_pawn_attacks(Board *b, const Square s) {
    };
    for (int i = 0; i < 2; ++i) {
       const Square target = s + targets[i]*pawn_direction(myc);
-      if (get_piece_color(b, target) == opposite_color(myc) || target == b->enpassant_square) {
+      if (get_piece_color(b, target) == opposite_color(myc)
+          || target == b->enpassant_square || gen_attacked_by_enemy
+         ) {
          res |= (1ull << target) & masks[i];
       }
    }

@@ -104,7 +104,8 @@ void remove_piece_at(Board *b, const Square s);
 
   @return a Bitboard containing the moves.
 */
-Bitboard gen_sliding_piece_moves(Board *b, const Square s, const PieceType t);
+Bitboard gen_sliding_piece_moves(Board *b, const Square s, const PieceType t,
+                                 const bool gen_attacked_by_enemy);
 
 /*!
   Generate legal moves of king.
@@ -112,7 +113,7 @@ Bitboard gen_sliding_piece_moves(Board *b, const Square s, const PieceType t);
 
   @return a Bitboard containing the moves.
 */
-Bitboard gen_king_moves(Board *b, const Square s);
+Bitboard gen_king_moves(Board *b, const Square s, const bool gen_attacked_by_enemy);
 
 /*!
   Generate (pseudo-legal) moves of knight.
@@ -120,7 +121,7 @@ Bitboard gen_king_moves(Board *b, const Square s);
 
   @return a Bitboard containing the moves.
 */
-Bitboard gen_knight_moves(Board *b, const Square s);
+Bitboard gen_knight_moves(Board *b, const Square s, const bool gen_attacked_by_enemy);
 
 /*!
   Generate pawn push if the target square is empty.
@@ -144,13 +145,13 @@ Bitboard gen_double_push(Board *b, const Square s);
 
   @return a Bitboard containing the moves.
 */
-Bitboard gen_pawn_attacks(Board *b, const Square s);
+Bitboard gen_pawn_attacks(Board *b, const Square s, const bool gen_attacked_by_enemy);
 
 /*!
   Generate all possible moves of a piece.
   It is just a wrapper for `gen_knight_moves()` and other similar functions.
 */
-Bitboard gen_piece_moves(Board *b, const Square s);
+Bitboard gen_piece_moves(Board *b, const Square s, const bool gen_attacked_by_enemy);
 
 /*!
   Generate all legal moves at a given position, the result is stored
