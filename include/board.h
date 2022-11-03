@@ -31,8 +31,7 @@ typedef struct {
    vecMoveData move_history;
    vecPieceMoves movelist;
    CastlingRights cr;
-   Bitboard white_attacked;
-   Bitboard black_attacked;
+   Bitboard attacked_by_enemy;
 } Board;
 
 #define STANDARD_CHESS "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
@@ -149,10 +148,9 @@ Bitboard gen_pawn_attacks(Board *b, const Square s);
 
 /*!
   Generate all possible moves of a piece.
-  The result is a `PieceMoves` struct.
   It is just a wrapper for `gen_knight_moves()` and other similar functions.
 */
-PieceMoves gen_piece_moves(Board *b, const Square s);
+Bitboard gen_piece_moves(Board *b, const Square s);
 
 /*!
   Generate all legal moves at a given position, the result is stored

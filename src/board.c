@@ -12,8 +12,7 @@ Board *new_board(char FEN[]) {
       return NULL;
    }
    b->color_to_play = White;
-   b->white_attacked = 0;
-   b->black_attacked = 0;
+   b->attacked_by_enemy = 0;
    b->enpassant_square = NoSquare;
    b->cr = AnyCastling;
    memset(b->piecesBB, 0, PiecesLen*sizeof(b->piecesBB[0]));
