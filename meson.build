@@ -1,21 +1,29 @@
-project('chess-engine', 'c',
-        default_options : ['c_std=c11'])
-add_project_arguments('-Wno-unused-function', language : 'c')
+project('chess-engine', 'cpp',
+        default_options : ['cpp_std=c++17'])
 
 incdir = include_directories('include/')
 
 libengine = library('chess-engine',
-           'src/load_fen.c',
-           'src/move_gen.c',
-           'src/pawn_move_gen.c',
-           'src/board.c',
-           include_directories : incdir,
-          )
+                    'src/bitboard.cpp',
+                    'src/load_fen.cpp',
+                    'src/move_gen.cpp',
+                    'src/pawn_move_gen.cpp',
+                    'src/board.cpp',
+                    include_directories : incdir,
+                   )
 
 libengine_dep = declare_dependency(include_directories : incdir,
                                    link_with : libengine)
 
+raylib_cpp_dep = dependency('raylib-cpp')
 executable('chess',
-           'src/main.c',
+           'src/main.cpp',
            include_directories : incdir,
            link_with : libengine)
+
+executable('chess-gui',
+           'src/main2.cpp',
+           include_directories : incdir,
+           link_with : libengine,
+           dependencies : raylib_cpp_dep,
+          )
