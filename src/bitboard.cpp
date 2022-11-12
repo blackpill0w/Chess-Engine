@@ -2,7 +2,7 @@
 
 namespace Chess {
 
-Bitboard between_bb(Square sq1, Square sq2) {
+static constexpr Bitboard _between_bb(Square sq1, Square sq2) {
    if (sq1 == sq2) {
       return sqbb(sq2);
    }
@@ -28,4 +28,17 @@ Bitboard between_bb(Square sq1, Square sq2) {
    }
    return res;
 }
+
+static array<array<Bitboard, 64>, 64> _between_bb_all() {
+   array<array<Bitboard, 64>, 64> arr{};
+   for (Square sq1 = A1; sq1 <= H8; ++sq1) {
+      for (Square sq2 = A1; sq2 <= H8; ++sq2) {
+         arr[sq1][sq2] = _between_bb(sq1, sq2);
+      }
+   }
+   return arr;
+}
+
+const array<array<Bitboard, 64>, 64> _betweenBB = _between_bb_all();
+
 }

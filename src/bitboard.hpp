@@ -9,7 +9,7 @@ using std::array;
 
 namespace Chess {
 
-inline Bitboard sqbb(Square sq) { return 1ull << sq; };
+inline constexpr Bitboard sqbb(Square sq) { return 1ull << sq; };
 
 constexpr bool more_than_one(Bitboard b) { return b & (b - 1); }
 
@@ -31,7 +31,8 @@ inline Square pop_lsb(Bitboard& b) {
   return s;
 }
 
-extern Bitboard between_bb(Square sq1, Square sq2);
+extern const array<array<Bitboard, 64>, 64> _betweenBB;
+inline Bitboard between_bb(Square sq1, Square sq2) { return _betweenBB.at(sq1).at(sq2); }
 
 inline constexpr Bitboard _main_diagonal = 0x8040201008040201;
 inline constexpr array<Bitboard, 15> diagonals = {

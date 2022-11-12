@@ -89,7 +89,6 @@ MoveData Board::gen_move_data(const Square from, const Square to) const {
 }
 
 Bitboard Board::attackers_of(const Square s) const {
-   // TODO
    Bitboard res = 0;
    const PieceColor myc = get_piece_color(s);
    const Bitboard enemyq = piecesBB[myc == White ? BQ : WQ];
