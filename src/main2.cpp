@@ -79,7 +79,7 @@ int main(void) {
 
    int selected_piece = -1;
    int selected_piece_moves = -1;
-   const Color spm_color = ColorAlpha(raylib::Color(255, 0, 0), 0.75f);
+   const Color spm_color = ColorAlpha(raylib::Color(142, 193, 112), 0.75f);
 
    Vector2 mouse_pos = {0};
    Square from = Chess::NoSquare;
