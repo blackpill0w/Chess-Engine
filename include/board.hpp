@@ -27,7 +27,7 @@ enum { gen_default, gen_with_no_block, gen_pseudo, gen_ignoring_enemy_king = 4 }
 struct PieceMoves {
    Square pos;
    Bitboard possible_moves;
-   PieceMoves() = default;
+   PieceMoves() : pos{ NoSquare }, possible_moves{} {};
    PieceMoves(Square s, Bitboard bb) : pos{s}, possible_moves{bb} {};
 };
 
@@ -35,27 +35,37 @@ inline const string standard_chess = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBN
 
 struct Board {
 public:
-   //static array<array<Bitboard, 64>, 64> betweenBB;
-   array<Bitboard, 12> piecesBB; // Pieces' bitboards
+   // A list of bitboards, one for each color-piece combination
+   array<Bitboard, 12> piecesBB;
+   // Save en passant target square if it exists
    Square enpassant_square;
+   // The color of the pieces to play
    PieceColor color_to_play;
+   // A list of previously played moves
    vector<MoveData> move_history;
+   // The list of moves each piece (with color to play) can make
    vector<PieceMoves> movelist;
+   // Castling rights
    CastlingRights cr;
+   // A bitboard containing the squares attacked by the enemy
    Bitboard attacked_by_enemy;
+   // A bitboard containing the pieces putting the king (with color to play) in check
    Checkers checkers;
-   Bitboard possible_moves = 0;
+   // This variable is used to restrict movement of pieces when in check, etc
+   Bitboard possible_moves = ~0;
 public:
    /*!
      Default constructor.
+     @param FEN: a FEN notation string.
+
      WARNING: the string MUST be a valid FEN notation, otherwise the engine aborts.
    */
-   Board(string FEN);
+   Board(const string &FEN);
 
    /*!
      Load a FEN string into a board and generate legal moves.
    */
-   void load_fen(string& FEN);
+   void load_fen(string FEN);
 
    /*!
      Returns a Bitboard containing all white pieces.
@@ -73,27 +83,26 @@ public:
    Bitboard all_pieces() const;
 
    /*!
-     TODO
+      Get the type of a piece.
+      If the square is empty, `NoType` is returned.
    */
    PieceType get_piece_type(const Square s) const;
 
    /*!
-     @return the index of the bitboard containing the piece if it exists.
+      Return the index of the bitboard containing the piece if it exists.
    */
    size_t get_pieceBB_index(const Square s) const;
 
    /*!
-     Get color of a piece given its positions.
-     @return NoColor if the square is empty, otherwise the color of the occupying piece.
+      Get color of a piece given its positions.
+      If the square is empty, `NoColor` is returned.
    */
    PieceColor get_piece_color(const Square s) const;
 
    /*!
-     Check if a position is occupied.
-     @param s: the position of the piece to be tested.
-     @return true if occupied, otherwise false.
+     Check if a square is occupied.
    */
-   bool ispos_occupied(const Square s) const;
+   bool is_square_occupied(const Square s) const;
 
    //! Remove a piece from the board.
    void remove_piece_at(const Square s);
@@ -141,40 +150,41 @@ public:
    Bitboard gen_double_push(const Square s) const;
 
    /*!
-     Generates pawn attacks if corresponding positions are occupied by enemy.
-     @param s: the position of the pawn.
+      Generates pawn attacks if corresponding positions are occupied by enemy.
+      @param s: the position of the pawn.
 
-     @return a Bitboard containing the moves.
+      @return a Bitboard containing the moves.
    */
    Bitboard gen_pawn_attacks(const Square s, const int flags = gen_default) const;
 
    /*!
-     Generate all possible moves of a piece.
-     It is just a wrapper for `gen_knight_moves()` and other similar functions.
+      Generate all possible moves of a piece.
+      It is just a wrapper for `gen_knight_moves()` and other similar functions.
    */
    Bitboard gen_piece_moves(const Square s, const int flags = gen_default) const;
 
    /*!
-     Generate all legal moves at a given position, the result is stored
-     in `Board::movelist`.
+      Generate all legal moves at a given position, the result is stored
+      in `Board::movelist`.
    */
    void gen_board_legal_moves();
 
    /*!
-     TODO
+      TODO
    */
    MoveData gen_move_data(const Square from, const Square to) const;
 
    /*!
-     Gets attackers of a square.
+      Gets attackers of a square.
    */
    Bitboard attackers_of(const Square s) const;
 
+   enum MoveErr { NoError, InavlidMove };
    /*!
-     Make a move.
-     @return 0 on success, -1 if move is invalid.
+      Make a move.
+      @return `NoError` on success, `InvalidMove` if move is invalid.
    */
-   int make_move(const Square from, const Square to);
+   MoveErr make_move(const Square from, const Square to);
 
 };
 

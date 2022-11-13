@@ -11,7 +11,7 @@ using std::string;
 
 namespace Chess
 {
-Board::Board (string FEN)
+Board::Board (const string &FEN)
    : piecesBB{}, enpassant_square{NoSquare}, color_to_play{White},
      move_history{}, movelist{}, cr{AnyCastling}, attacked_by_enemy{},
      checkers{}
@@ -63,7 +63,7 @@ PieceColor Board::get_piece_color(const Square s) const {
    return res <= wp_end ? White : res <= bp_end ? Black : NoColor;
 }
 
-bool Board::ispos_occupied(const Square s) const {
+bool Board::is_square_occupied(const Square s) const {
    return (sqbb(s) & all_pieces()) != 0;
 }
 
@@ -125,14 +125,14 @@ static void change_piece_pos(Board *b, Square from, Square to) {
    setbit(b->piecesBB[i], to);
 }
 
-int Board::make_move(const Square from, const Square to) {
+Board::MoveErr Board::make_move(const Square from, const Square to) {
    // 0 on success, -1 if move is invalid
-   int err = -1;
+   MoveErr err = InavlidMove;
    for (size_t i = 0; i < movelist.size(); ++i) {
       if (movelist.at(i).pos == from
           && (movelist.at(i).possible_moves & sqbb(to))
       ) {
-         err = 0;
+         err = NoError;
 
          PieceColor myc = get_piece_color(from);
          MoveData md    = gen_move_data(from, to);
@@ -163,8 +163,6 @@ int Board::make_move(const Square from, const Square to) {
 
          color_to_play = ~myc;
          gen_board_legal_moves();
-
-         return 0;
       }
    }
    if (err) {

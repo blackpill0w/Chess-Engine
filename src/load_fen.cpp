@@ -7,11 +7,11 @@
 
 namespace Chess {
 
-static size_t gettok_index(string& str, const string& delim);
-static void fen_add_pieces(Board *b, const string& fen_pieces);
-static void fen_set_castling_rights(Board *b, const string& cr);
+static size_t gettok_index(string &str, const string &delim);
+static void fen_add_pieces(Board *b, const string &fen_pieces);
+static void fen_set_castling_rights(Board *b, const string &cr);
 
-void Board::load_fen(string& FEN) {
+void Board::load_fen(string FEN) {
    if (!move_history.empty()) {
       move_history.clear();
    }
@@ -30,14 +30,14 @@ void Board::load_fen(string& FEN) {
    gen_board_legal_moves();
 }
 
-size_t gettok_index(string& str, const string& delim) {
+size_t gettok_index(string &str, const string &delim) {
     static size_t i = string::npos;
     if (i != string::npos) str.erase(0, i + delim.length());
     i = str.find(delim);
     return i;
 }
 
-void fen_add_pieces(Board *b, const string& fen_pieces) {
+void fen_add_pieces(Board *b, const string &fen_pieces) {
    int x = 0;
    int y = 7;
    for (auto c : fen_pieces) {
@@ -66,7 +66,7 @@ void fen_add_pieces(Board *b, const string& fen_pieces) {
    }
 }
 
-void fen_set_castling_rights(Board *b, const string& cr) {
+void fen_set_castling_rights(Board *b, const string &cr) {
    if (cr[0] == '-') {
       b->cr = NoCastling;
    }

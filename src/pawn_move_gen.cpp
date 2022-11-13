@@ -7,7 +7,7 @@ namespace Chess {
 Bitboard Board::gen_pawn_push(const Square s) const {
    const PieceColor myc = get_piece_color(s);
    Square pushpos = s + 8*pawn_direction(myc);
-   if (pushpos < 0 || pushpos > 63 || ispos_occupied(pushpos)) {
+   if (pushpos < 0 || pushpos > 63 || is_square_occupied(pushpos)) {
       return 0;
    }
    return sqbb(pushpos);
@@ -19,7 +19,7 @@ Bitboard Board::gen_double_push(const Square s) const {
    res |= gen_pawn_push(s);
    if (res != 0) {
       Square pushpos = s + 16*pawn_direction(myc);
-      if (pushpos >= 0 && pushpos <= 63 && !ispos_occupied(pushpos)) {
+      if (pushpos >= 0 && pushpos <= 63 && !is_square_occupied(pushpos)) {
          res |= sqbb(pushpos);
       }
    }

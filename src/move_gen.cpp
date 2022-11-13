@@ -152,6 +152,7 @@ void Board::gen_board_legal_moves() {
    checkers = 0;
    possible_moves = ~0;
 
+   // Generated squares attacked by the enemy
    for (Square sq = A1; sq <= H8; ++sq) {
       // no need to check if bit is set because `get_piece_color()` returns
       // `NoColor` if the square is empty.
@@ -159,20 +160,20 @@ void Board::gen_board_legal_moves() {
          attacked_by_enemy |= gen_piece_moves(sq, gen_pseudo | gen_ignoring_enemy_king);
       }
    }
-   const Square king = lsb(piecesBB[color_to_play == White ? WK : BK]);
-   const Bitboard attackers = attackers_of(king);
-
+   // Checks
+   const Square king_sq = lsb(piecesBB[color_to_play == White ? WK : BK]);
+   const Bitboard attackers = attackers_of(king_sq);
    if (more_than_one(attackers)) {
-      possible_moves = piecesBB[color_to_play == White ? WK : BK];
+      possible_moves = 0;
    }
    else if (attackers) {
-      possible_moves = between_bb(king, lsb(attackers));
+      possible_moves = between_bb(king_sq, lsb(attackers));
    }
 
    for (Square sq = A1; sq < H8; ++sq) {
       if (get_piece_color(sq) == color_to_play) {
          PieceMoves pm{ sq, gen_piece_moves(sq) };
-         if (sq != lsb(piecesBB[color_to_play == White ? WK : BK])) {
+         if (sq != king_sq) {
             pm.possible_moves &= possible_moves;
          }
          movelist.push_back(pm);

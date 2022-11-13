@@ -41,7 +41,7 @@ static void print_board(Board& b, PieceColor p) {
       for (int j = 0; j < 8; ++j) {
          const Square s = Square(i*8 + j);
          PieceType t = b.get_piece_type(s);
-         if (b.ispos_occupied(s) && (p == NoColor || b.get_piece_color(s) == p)) {
+         if (b.is_square_occupied(s) && (p == NoColor || b.get_piece_color(s) == p)) {
             char c = pieces_char[t] + (b.get_piece_color(s) == White ? 0 : 32);
             cout << c;
          }

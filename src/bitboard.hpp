@@ -13,7 +13,7 @@ inline constexpr Bitboard sqbb(Square sq) { return 1ull << sq; };
 
 constexpr bool more_than_one(Bitboard b) { return b & (b - 1); }
 
-// WARNING: the following functions work only with GCC, Clang or ICC
+// WARNING: the following three functions work only with GCC, Clang or ICC
 inline Square lsb(Bitboard b) {
    assert(b);
    return Square(__builtin_ctzll(b));
@@ -22,8 +22,6 @@ inline Square msb(Bitboard b) {
    assert(b);
    return Square(63 ^ __builtin_clzll(b));
 }
-
-
 inline Square pop_lsb(Bitboard& b) {
   assert(b);
   const Square s = lsb(b);
@@ -87,12 +85,12 @@ inline constexpr Bitboard anti_diagonal_bb(Square s) {
    return anti_diagonals.at(get_rank(s) + get_file(s));
 }
 inline constexpr bool squares_on_same_antidiagonal(Square s1, Square s2) {
-   // NOTE: for some reason the code snippet from chessprogramming.org didn't
+   // NOTE: for some reason the code snippet from https://chessprogramming.org didn't
    //       work (ex: A1 and H2 returns true)
    return anti_diagonal_bb(s1) == anti_diagonal_bb(s2);
 }
 
-//extern const array<array<Bitboard, 64>, 64> betweenBB;
-//extern Bitboard between_bb(Square sq1, Square sq2);
+extern const array<array<Bitboard, 64>, 64> _betweenBB;
+extern Bitboard between_bb(Square sq1, Square sq2);
 
 };

@@ -41,4 +41,4 @@ static array<array<Bitboard, 64>, 64> _between_bb_all() {
 
 const array<array<Bitboard, 64>, 64> _betweenBB = _between_bb_all();
 
-}
+} // namespace Chess
