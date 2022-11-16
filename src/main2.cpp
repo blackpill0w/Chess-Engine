@@ -57,7 +57,7 @@ int main(void) {
 
    //Board b{ Chess::standard_chess };
    //Board b { "3k4/8/3Pq3/4N3/3B2R1/6K1/3Q4/8 w - - 0 1" };
-   Board b{ "6k1/4p3/8/K2P1nnr/8/8/8/8 b - - 0 1" };
+   Board b{ "6k1/4p3/8/K2P1nnr/8/8/8/8 w - - 0 1" };
 
    Image board_img = LoadImage("../assets/img/chess-board.png");
    ImageResize(&board_img, 8*pieceSize, 8*pieceSize);
@@ -150,9 +150,10 @@ int main(void) {
             }
          }
          // Draw pieces
-         for (size_t i = 0; i < pieces.size(); ++i) {
-            DrawTextureV(*pieces.at(i).txtr, pieces.at(i).pos, WHITE);
+         for (int i = 0; i < pieces.size(); ++i) {
+            if (i != selected_piece) DrawTextureV(*pieces.at(i).txtr, pieces.at(i).pos, WHITE);
          }
+         if (selected_piece != -1) DrawTextureV(*pieces.at(selected_piece).txtr, pieces.at(selected_piece).pos, WHITE);
       }
       EndDrawing();
    }

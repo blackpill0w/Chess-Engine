@@ -19,7 +19,7 @@ inline constexpr size_t bp_start = 6;
 inline constexpr size_t bp_end   = 11;
 
 // enum to access pieces' positions
-enum { WK, WQ, WR, WB, WN, WP, BK, BQ, BR, BB, BN, BP };
+enum { WN, WB, WR, WQ, WK, WP, BN, BB, BR, BQ, BK, BP };
 
 struct PieceMoves {
    Square pos;
@@ -141,7 +141,7 @@ public:
       Make a move.
       @return `NoError` on success, `InvalidMove` if move is invalid.
    */
-   MoveErr make_move(const Square from, const Square to);
+   MoveErr make_move(const Square from, const Square to, const PieceType promote_to = Queen);
 
 };
 

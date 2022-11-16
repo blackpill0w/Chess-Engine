@@ -261,7 +261,7 @@ static void change_piece_pos(Board &b, Square from, Square to) {
    setbit(b.piecesBB[i], to);
 }
 
-Board::MoveErr Board::make_move(const Square from, const Square to) {
+Board::MoveErr Board::make_move(const Square from, const Square to, const PieceType promote_to) {
    MoveErr err = InavlidMove;
    for (size_t i = 0; i < movelist.size(); ++i) {
       if (movelist.at(i).pos == from
@@ -283,7 +283,11 @@ Board::MoveErr Board::make_move(const Square from, const Square to) {
          else if (get_piece_type(from) == Pawn && abs((int) (from - to)) == 8*2) {
             enpassant_square = from + 8*pawn_direction(myc);
          }
-         else if (md_get_move_type(md) == Castling) { // take if en passant
+         else if (md_get_move_type(md) == Promotion) {
+            remove_piece_at(from);
+            piecesBB.at(promote_to + (color_to_play == White ? 0 : 6)) |= sqbb(to);
+         }
+         else if (md_get_move_type(md) == Castling) {
             if (from < to) { // king side
                change_piece_pos(*this, to + 1, to - 1);
             }
@@ -293,7 +297,7 @@ Board::MoveErr Board::make_move(const Square from, const Square to) {
          }
          handle_castling_rights_changes(*this, myc, from, to);
 
-         change_piece_pos(*this, from, to);
+         if (md_get_move_type(md) != Promotion) change_piece_pos(*this, from, to);
          move_history.push_back(md);
 
          color_to_play = ~myc;
