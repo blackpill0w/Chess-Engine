@@ -4,6 +4,7 @@
 ** DONE checks
 ** DONE pins
 ** TODO make sure move generation works
+*** TODO en passant discovered check
 
 * Search & Eval
 ** ??

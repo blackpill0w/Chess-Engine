@@ -23,7 +23,7 @@ Vector2 square_to_coordinates(Square sq);
 Square coordinates_to_square(Vector2 v);
 void load_chess_textures(array<Texture2D, 12> &txtrs, const array<string, 12> &imgs);
 
-constexpr int pieceSize    = 70;
+constexpr int pieceSize    = 60;
 constexpr int winW         = 8*pieceSize;
 constexpr int winH         = 8*pieceSize;
 constexpr int piecePadding = pieceSize / 2;

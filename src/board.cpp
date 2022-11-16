@@ -203,6 +203,18 @@ void Board::gen_board_legal_moves() {
       possible_moves = between_bb(king_sq, lsb(attackers));
    }
 
+   // Handling en passant discovered check
+   // if (get_rank(king_sq) == get_rank(enpassant_square + 8*pawn_direction(color_to_play))) {
+   //    const Bitboard bb = get_rank(king_sq) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Rook));
+   //    if (bb) {
+   //       const Bitboard between = between_bb(king_sq, lsb(bb));
+   //       Bitboard pawns_between = sqbb(enpassant_square + 8*pawn_direction(color_to_play));
+   //       Bitboard mypawns_between = sqbb(enpassant_square + 8*pawn_direction(color_to_play));
+   //       if (popcnt(between) == 2 && between & piecesBB[WP] && between & piecesBB[BP]) {
+   //       }
+   //    }
+   // }
+
    for (Square sq = A1; sq < H8; ++sq) {
       if (get_piece_color(sq) == color_to_play) {
          const Bitboard ep = get_piece_type(sq) == Pawn ? sqbb(enpassant_square) : 0;
