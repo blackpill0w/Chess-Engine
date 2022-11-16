@@ -19,7 +19,7 @@ struct ChessPiece {
 
 Vector2 round_vector2(Vector2 v);
 int get_piece_index_at(vector<ChessPiece>& pieces, Vector2 p);
-Vector2 square_to_coordinates(Square s);
+Vector2 square_to_coordinates(Square sq);
 Square coordinates_to_square(Vector2 v);
 void load_chess_textures(array<Texture2D, 12> &txtrs, const array<string, 12> &imgs);
 
@@ -54,8 +54,8 @@ int main(void) {
    array<Texture2D, 12> txtrs{};
    load_chess_textures(txtrs, chess_imgs);
 
-   //Board b{ Chess::standard_chess };
-   Board b { "3k4/8/3Pq3/4N3/3B2R1/6K1/3Q4/8 w - - 0 1" };
+   Board b{ Chess::standard_chess };
+   //Board b { "3k4/8/3Pq3/4N3/3B2R1/6K1/3Q4/8 w - - 0 1" };
 
    Image board_img = LoadImage("../assets/img/chess-board.png");
    ImageResize(&board_img, 8*pieceSize, 8*pieceSize);
@@ -66,12 +66,12 @@ int main(void) {
    pieces.reserve(32);
 
 
-   for (Square i = A1; i <= H8; ++i) {
-      PieceType t = b.get_piece_type(i);
+   for (Square sq = A1; sq <= H8; ++sq) {
+      PieceType t = b.get_piece_type(sq);
       if (t != NoType) {
          ChessPiece p = {
-            square_to_coordinates(i),
-            &txtrs[t + (b.get_piece_color(i) == White ? 0 : 6)],
+            square_to_coordinates(sq),
+            &txtrs[t + (b.get_piece_color(sq) == White ? 0 : 6)],
          };
          pieces.push_back(p);
       }
@@ -101,14 +101,14 @@ int main(void) {
       }
       else if (selected_piece != -1 && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
          to = coordinates_to_square(GetMousePosition());
-         if (-1 != b.make_move(from, to)) {
+         if (b.make_move(from, to) == Board::NoError) {
             pieces.clear();
-            for (Square i = A1; i <= H8; ++i) {
-               const PieceType t = b.get_piece_type(i);
+            for (Square sq = A1; sq <= H8; ++sq) {
+               const PieceType t = b.get_piece_type(sq);
                if (t != NoType) {
                   ChessPiece p = {
-                     square_to_coordinates(i),
-                     &txtrs[t + (b.get_piece_color(i) == White ? 0 : 6)],
+                     square_to_coordinates(sq),
+                     &txtrs[t + (b.get_piece_color(sq) == White ? 0 : 6)],
                   };
                   pieces.push_back(p);
                }
@@ -141,9 +141,9 @@ int main(void) {
          DrawTexture(board_txtr, 0, 0, WHITE);
          // Draw available moves if a piece is selected
          if (selected_piece_moves != -1) {
-            for (Square i = A1; i <= H8; ++i) {
-               if (b.movelist.at(selected_piece_moves).possible_moves & (1ull << i)) {
-                  DrawRectangleV(square_to_coordinates(i),(Vector2) {pieceSize, pieceSize}, spm_color);
+            for (Square sq = A1; sq <= H8; ++sq) {
+               if (b.movelist.at(selected_piece_moves).possible_moves & (1ull << sq)) {
+                  DrawRectangleV(square_to_coordinates(sq),(Vector2) {pieceSize, pieceSize}, spm_color);
                }
             }
          }
@@ -176,15 +176,15 @@ int get_piece_index_at(vector<ChessPiece>& pieces, Vector2 p) {
 }
 
 Square coordinates_to_square(Vector2 v) {
-   Square s = (Square) (v.x / pieceSize);
-   s += 8*(7 - (int) (v.y / pieceSize));
-   return s;
+   Square sq = (Square) (v.x / pieceSize);
+   sq += 8*(7 - (int) (v.y / pieceSize));
+   return sq;
 }
 
-Vector2 square_to_coordinates(Square s) {
+Vector2 square_to_coordinates(Square sq) {
    return (Vector2) {
-      (float) (s%8) * pieceSize,
-      (float) (7 - (int)(s/8)) * pieceSize,
+      (float) (sq%8) * pieceSize,
+      (float) (7 - (int)(sq/8)) * pieceSize,
    };
 }
 

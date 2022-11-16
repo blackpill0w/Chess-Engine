@@ -1,7 +1,6 @@
 #pragma once
 
 #include <array>
-#include <string_view>
 #include <vector>
 #include <string>
 
@@ -21,14 +20,12 @@ inline constexpr size_t bp_end   = 11;
 
 // enum to access pieces' positions
 enum { WK, WQ, WR, WB, WN, WP, BK, BQ, BR, BB, BN, BP };
-// enum used at move generation
-enum { gen_default, gen_with_no_block, gen_pseudo, gen_ignoring_enemy_king = 4 };
 
 struct PieceMoves {
    Square pos;
    Bitboard possible_moves;
    PieceMoves() : pos{ NoSquare }, possible_moves{} {};
-   PieceMoves(Square s, Bitboard bb) : pos{s}, possible_moves{bb} {};
+   PieceMoves(Square sq, Bitboard bb) : pos{sq}, possible_moves{bb} {};
 };
 
 inline const string standard_chess = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -82,86 +79,46 @@ public:
    */
    Bitboard all_pieces() const;
 
+   /*
+      TODO
+   */
+   Bitboard get_pieces(const PieceColor c, const PieceType pt) const;
+
    /*!
       Get the type of a piece.
       If the square is empty, `NoType` is returned.
    */
-   PieceType get_piece_type(const Square s) const;
+   PieceType get_piece_type(const Square sq) const;
 
    /*!
       Return the index of the bitboard containing the piece if it exists.
    */
-   size_t get_pieceBB_index(const Square s) const;
+   size_t get_pieceBB_index(const Square sq) const;
 
    /*!
       Get color of a piece given its positions.
       If the square is empty, `NoColor` is returned.
    */
-   PieceColor get_piece_color(const Square s) const;
+   PieceColor get_piece_color(const Square sq) const;
 
    /*!
      Check if a square is occupied.
    */
-   bool is_square_occupied(const Square s) const;
+   bool is_square_occupied(const Square sq) const;
 
    //! Remove a piece from the board.
-   void remove_piece_at(const Square s);
-
-   /*!
-     Generate (pseudo-legal) moves of sliding pieces (queen, rook and bishop).
-     @param s: the position of the piece.
-     @param t: type of the piece (Queen/Rook/Bishop).
-
-     @return a Bitboard containing the moves.
-   */
-   Bitboard gen_sliding_piece_moves(const Square s, const PieceType t,
-                                    const int flags = gen_default) const;
-
-   /*!
-     Generate legal moves of king.
-     @param s: the position of the piece.
-
-     @return a Bitboard containing the moves.
-   */
-   Bitboard gen_king_moves(const Square s, const int flags = gen_default) const;
-
-   /*!
-     Generate (pseudo-legal) moves of knight.
-     @param s: the position of the piece.
-
-     @return a Bitboard containing the moves.
-   */
-   Bitboard gen_knight_moves(const Square s, const int flags = gen_default) const;
-
-   /*!
-     Generate pawn push if the target square is empty.
-     @param s: the position of the pawn.
-
-     @return a Bitboard containing the moves.
-   */
-   Bitboard gen_pawn_push(const Square s) const;
-
-   /*!
-     Generate pawn push and double push if the target square is empty.
-     @param s: the position of the pawn.
-
-     @return a Bitboard containing the moves.
-   */
-   Bitboard gen_double_push(const Square s) const;
-
-   /*!
-      Generates pawn attacks if corresponding positions are occupied by enemy.
-      @param s: the position of the pawn.
-
-      @return a Bitboard containing the moves.
-   */
-   Bitboard gen_pawn_attacks(const Square s, const int flags = gen_default) const;
+   void remove_piece_at(const Square sq);
 
    /*!
       Generate all possible moves of a piece.
       It is just a wrapper for `gen_knight_moves()` and other similar functions.
    */
-   Bitboard gen_piece_moves(const Square s, const int flags = gen_default) const;
+   Bitboard gen_piece_moves(const Square sq, const Bitboard occ, const Bitboard mypieces) const;
+
+   /*
+      TODO
+   */
+   void limit_moves_of_pinned_pieces();
 
    /*!
       Generate all legal moves at a given position, the result is stored
@@ -177,7 +134,7 @@ public:
    /*!
       Gets attackers of a square.
    */
-   Bitboard attackers_of(const Square s) const;
+   Bitboard attackers_of(const Square sq) const;
 
    enum MoveErr { NoError, InavlidMove };
    /*!

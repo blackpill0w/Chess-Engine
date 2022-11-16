@@ -39,7 +39,7 @@ inline constexpr int pawn_direction(PieceColor c) {
    return c == White ? 1 : -1;
 }
 
-enum PieceType { Knight, Bishop, Rook, Queen, King, Pawn, NoType };
+enum PieceType { Knight, Bishop, Rook, Queen, King, Pawn, PieceTypeNum = 6, NoType };
 
 enum Square {
    A1, B1, C1, D1, E1, F1, G1, H1,
@@ -50,27 +50,27 @@ enum Square {
    A6, B6, C6, D6, E6, F6, G6, H6,
    A7, B7, C7, D7, E7, F7, G7, H7,
    A8, B8, C8, D8, E8, F8, G8, H8,
-   NoSquare
+   SqNum = 64, NoSquare
 };
-
+inline constexpr Bitboard sqbb(Square sq) { return 1ull << sq; };
 ENABLE_OPERATORS_ON(Square);
 
 enum File {
    fileA, fileB, fileC, fileD, fileE, fileF, fileG, fileH
 };
 inline constexpr Bitboard _fileA = 0x0101010101010101;
-inline constexpr File get_file(Square s) { return File(s % 8); }
+inline constexpr File get_file(Square sq) { return File(sq % 8); }
 inline constexpr Bitboard file_bb(File chess_file) { return _fileA << chess_file; }
 inline constexpr Bitboard file_bb(Square sq) { return file_bb(get_file(sq)); }
-inline constexpr bool squares_on_same_file(Square s1, Square s2) { return ((s1 ^ s2) & 7) == 0; }
+inline constexpr bool squares_on_same_file(Square sq1, Square sq2) { return get_file(sq1) == get_file(sq2); }
 
 enum Rank { rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8 };
 
 inline constexpr Bitboard _rank1 = 255;
-inline constexpr Rank get_rank(Square s) { return Rank(s / 8); }
+inline constexpr Rank get_rank(Square sq) { return Rank(sq / 8); }
 inline constexpr Bitboard rank_bb(Rank chess_rank) { return _rank1 << (8*chess_rank); }
 inline constexpr Bitboard rank_bb(Square sq) { return rank_bb(get_rank(sq)); }
-inline constexpr bool squares_on_same_rank(Square s1, Square s2) { return ((s1 ^ s2) & 56) == 0; }
+inline constexpr bool squares_on_same_rank(Square sq1, Square sq2) { return get_rank(sq1) == get_rank(sq2); }
 
 enum Direction {
    North,
@@ -81,9 +81,10 @@ enum Direction {
    NoWe,
    SoEa,
    SoWe,
+   DirNum = 8
 };
 
-static constexpr array<int, 8> dir = {
+static constexpr array<int, DirNum> dir = {
     // Rook directions
     8, -8, 1, -1,
     // Bishop directions

@@ -12,14 +12,14 @@ inline std::ostream& operator<<(std::ostream& os, PieceColor c) {
    return os << (c == White ? "White" : c == Black ? "Black" : "NoColor");
 }
 
-inline std::ostream& operator<<(std::ostream& os, Square s) {
-   if (s == NoSquare) {
+inline std::ostream& operator<<(std::ostream& os, Square sq) {
+   if (sq == NoSquare) {
       return os << "No Square";
    }
    else {
       char str[3] = {0};
-      str[0] = 'A' + (s%8);
-      str[1] = '1' + (s/8);
+      str[0] = 'A' + (sq%8);
+      str[1] = '1' + (sq/8);
       return os << str;
    }
 }
@@ -39,10 +39,10 @@ static const char pieces_char[] = {'N', 'B', 'R', 'Q', 'K', 'P'};
 static void print_board(Board& b, PieceColor p) {
    for (int i = 7; i >= 0; --i) {
       for (int j = 0; j < 8; ++j) {
-         const Square s = Square(i*8 + j);
-         PieceType t = b.get_piece_type(s);
-         if (b.is_square_occupied(s) && (p == NoColor || b.get_piece_color(s) == p)) {
-            char c = pieces_char[t] + (b.get_piece_color(s) == White ? 0 : 32);
+         const Square sq = Square(i*8 + j);
+         PieceType t = b.get_piece_type(sq);
+         if (b.is_square_occupied(sq) && (p == NoColor || b.get_piece_color(sq) == p)) {
+            char c = pieces_char[t] + (b.get_piece_color(sq) == White ? 0 : 32);
             cout << c;
          }
          else {

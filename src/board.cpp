@@ -1,11 +1,13 @@
 #include "./board.hpp"
 
-#include <iostream>
 #include <string>
+#include <iostream>
 
 #include "./utils.hpp"
 #include "./bitboard.hpp"
 #include "./bitopt.hpp"
+#include "./move_gen.hpp"
+//#include "./debug.hpp"
 
 using std::string;
 
@@ -33,10 +35,32 @@ Bitboard Board::all_pieces() const {
    return white_pieces() | black_pieces();
 }
 
-PieceType Board::get_piece_type(const Square s) const {
+Bitboard Board::get_pieces(const PieceColor c, const PieceType pt) const {
+   const int i = c == White ? 0 : 6;
+   switch (pt) {
+      case King:
+         return piecesBB[WK + i];
+      case Queen:
+         return piecesBB[WQ + i];
+      case Rook:
+         return piecesBB[WR + i];
+      case Bishop:
+         return piecesBB[WB + i];
+      case Knight:
+         return piecesBB[WN + i];
+      case Pawn:
+         return piecesBB[WP + i];
+      case NoType:
+         return c == White ? white_pieces() : black_pieces();
+      default:
+         return 0;
+   }
+}
+
+PieceType Board::get_piece_type(const Square sq) const {
    PieceType t = NoType;
    for (size_t i = 0; i < piecesBB.size(); ++i) {
-      if (sqbb(s) & piecesBB[i]) {
+      if (sqbb(sq) & piecesBB[i]) {
          t = (i == WK || i == BK) ? King
             : (i == WQ || i == BQ) ? Queen
             : (i == WR || i == BR) ? Rook
@@ -49,26 +73,25 @@ PieceType Board::get_piece_type(const Square s) const {
    return t;
 }
 
-size_t Board::get_pieceBB_index(const Square s) const {
+size_t Board::get_pieceBB_index(const Square sq) const {
    for (size_t i = 0; i < piecesBB.size(); ++i) {
-      if (sqbb(s) & piecesBB[i]) {
+      if (sqbb(sq) & piecesBB[i]) {
          return i;
       }
    }
    return invalid_index;
 }
 
-PieceColor Board::get_piece_color(const Square s) const {
-   const unsigned res = get_pieceBB_index(s);
-   return res <= wp_end ? White : res <= bp_end ? Black : NoColor;
+PieceColor Board::get_piece_color(const Square sq) const {
+   return sqbb(sq) & white_pieces() ? White : sqbb(sq) & black_pieces() ? Black : NoColor;
 }
 
-bool Board::is_square_occupied(const Square s) const {
-   return (sqbb(s) & all_pieces()) != 0;
+bool Board::is_square_occupied(const Square sq) const {
+   return (sqbb(sq) & all_pieces()) != 0;
 }
 
-void Board::remove_piece_at(const Square s) {
-   unsetbit(piecesBB[get_pieceBB_index(s)], s);
+void Board::remove_piece_at(const Square sq) {
+   unsetbit(piecesBB[get_pieceBB_index(sq)], sq);
 }
 
 MoveData Board::gen_move_data(const Square from, const Square to) const {
@@ -88,21 +111,115 @@ MoveData Board::gen_move_data(const Square from, const Square to) const {
    return new_md(from, to, Queen, mt);
 }
 
-Bitboard Board::attackers_of(const Square s) const {
+Bitboard Board::attackers_of(const Square sq) const {
    Bitboard res = 0;
-   const PieceColor myc = get_piece_color(s);
-   const Bitboard enemyq = piecesBB[myc == White ? BQ : WQ];
-   const Bitboard enemyr = piecesBB[myc == White ? BR : WR];
-   const Bitboard enemyb = piecesBB[myc == White ? BB : WB];
+   const PieceColor myc = get_piece_color(sq);
 
-   res |= gen_sliding_piece_moves(s, Rook) & (enemyr | enemyq);
-
-   res |= gen_sliding_piece_moves(s, Bishop) & (enemyb | enemyq);
-
-   res |= (gen_knight_moves(s) & piecesBB[myc == White ? BN : WN]);
-   res |= (gen_king_moves(s) & piecesBB[myc == White ? BK : WK]);
+   res |= gen_sliding_piece_moves(sq, Rook, all_pieces(), get_pieces(myc, NoType)) & (get_pieces(~myc, Rook) | get_pieces(~myc, Queen));
+   res |= gen_sliding_piece_moves(sq, Bishop, all_pieces(), get_pieces(myc, NoType)) & (get_pieces(~myc, Bishop) | get_pieces(~myc, Queen));
+   res |= gen_knight_moves(sq, all_pieces(), get_pieces(myc, NoType)) & get_pieces(~myc, Knight);
+   res |= gen_pawn_attacks(sq, myc, all_pieces(), get_pieces(myc, NoType)) & get_pieces(~myc, Pawn);
+   res |= gen_king_moves(sq, all_pieces(), get_pieces(myc, NoType), myc, NoCastling) & get_pieces(~myc, King);
 
    return res;
+}
+
+Bitboard Board::gen_piece_moves(const Square sq, const Bitboard occ, const Bitboard mypieces) const {
+   Bitboard res = 0;
+   const PieceType pt = get_piece_type(sq);
+   const PieceColor myc = get_piece_color(sq);
+   if (pt == Queen || pt == Rook || pt == Bishop) {
+      res = gen_sliding_piece_moves(sq, pt, occ, mypieces);
+   }
+   else if (pt == Knight) {
+      res = gen_knight_moves(sq, occ, mypieces);
+   }
+   else if (pt == King) {
+      res = gen_king_moves(sq, occ, mypieces, myc, cr);
+   }
+   else if (pt == Pawn) {
+      res = gen_pawn_attacks(sq, myc, occ, mypieces);
+      if ((myc == White && get_rank(sq) == rank2)
+         || (myc == Black && get_rank(sq) == rank7)
+      ) {
+         res |= gen_double_push(sq, myc, occ);
+      }
+      else {
+         res |= gen_pawn_push(sq, myc, occ);
+      }
+   }
+   return res;
+}
+
+void Board::limit_moves_of_pinned_pieces() {
+   const Square king_sq = lsb(get_pieces(color_to_play, King));
+   const array<Bitboard, 2> possible_pinners = {
+      (rank_bb(king_sq) | file_bb(king_sq)) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Rook)),
+      (diagonal_bb(king_sq) | anti_diagonal_bb(king_sq)) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Bishop))
+   };
+   for (auto i : possible_pinners) {
+      while (i) {
+         const Square pinner = pop_lsb(i);
+         const Bitboard between = between_bb(king_sq, pinner);
+         if (!more_than_one(between & all_pieces() & ~sqbb(pinner))) {
+            for (auto& pm : movelist) {
+               if (0 != (sqbb(pm.pos) & between)) {
+                  pm.possible_moves &= between;
+                  break;
+               }
+            }
+         }
+      }
+   }
+}
+
+void Board::gen_board_legal_moves() {
+   movelist.clear();
+   attacked_by_enemy = 0;
+   checkers = 0;
+   possible_moves = ~0ull;
+
+   const Square king_sq = lsb(get_pieces(color_to_play, King));
+
+   // Generated squares attacked by the enemy
+   for (Square sq = A1; sq <= H8; ++sq) {
+      // no need to check if bit is set because `get_piece_color()` returns
+      // `NoColor` if the square is empty.
+      if (get_piece_color(sq) == ~color_to_play) {
+         if (get_piece_type(sq) == Pawn) {
+            attacked_by_enemy |= gen_piece_moves(sq, ~0, 0);
+         }
+         else {
+            attacked_by_enemy |= gen_piece_moves(sq, all_pieces() & ~sqbb(king_sq), 0);
+         }
+      }
+   }
+   // Checks
+   const Bitboard attackers = attackers_of(king_sq);
+   if (more_than_one(attackers)) {
+      possible_moves = 0;
+   }
+   else if (attackers) {
+      possible_moves = between_bb(king_sq, lsb(attackers));
+   }
+
+   for (Square sq = A1; sq < H8; ++sq) {
+      if (get_piece_color(sq) == color_to_play) {
+         const Bitboard ep = get_piece_type(sq) == Pawn ? sqbb(enpassant_square) : 0;
+         PieceMoves pm{ sq, gen_piece_moves(sq, all_pieces() | ep, get_pieces(color_to_play, NoType)) };
+         if (sq != king_sq) {
+            pm.possible_moves &= possible_moves;
+         }
+         else {
+            pm.possible_moves &= ~attacked_by_enemy;
+            if ((cr & (color_to_play == White ? WhiteCastling : BlackCastling)) && attackers) {
+               pm.possible_moves &= ~(sqbb(sq + 2) | sqbb(sq - 2));
+            }
+         }
+         movelist.push_back(pm);
+      }
+   }
+   limit_moves_of_pinned_pieces();
 }
 
 static void handle_castling_rights_changes(Board *b, PieceColor myc, Square from, Square to) {
@@ -126,7 +243,6 @@ static void change_piece_pos(Board *b, Square from, Square to) {
 }
 
 Board::MoveErr Board::make_move(const Square from, const Square to) {
-   // 0 on success, -1 if move is invalid
    MoveErr err = InavlidMove;
    for (size_t i = 0; i < movelist.size(); ++i) {
       if (movelist.at(i).pos == from
@@ -134,8 +250,8 @@ Board::MoveErr Board::make_move(const Square from, const Square to) {
       ) {
          err = NoError;
 
-         PieceColor myc = get_piece_color(from);
-         MoveData md    = gen_move_data(from, to);
+         PieceColor myc   = get_piece_color(from);
+         MoveData md      = gen_move_data(from, to);
          enpassant_square = NoSquare;
 
          // check if we should take a piece
