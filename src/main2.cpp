@@ -36,6 +36,7 @@ constexpr int pieceMaxH    = winH - pieceSize / 2;
 int main(void) {
    raylib::Window win{winW, winH, "Raylib"};
    SetTargetFPS(60);
+   win.SetPosition(40, 100);
 
    const array<string, 12> chess_imgs {
       "../assets/img/pieces/wn.png",
@@ -54,8 +55,9 @@ int main(void) {
    array<Texture2D, 12> txtrs{};
    load_chess_textures(txtrs, chess_imgs);
 
-   Board b{ Chess::standard_chess };
+   //Board b{ Chess::standard_chess };
    //Board b { "3k4/8/3Pq3/4N3/3B2R1/6K1/3Q4/8 w - - 0 1" };
+   Board b{ "6k1/4p3/8/K2P1nnr/8/8/8/8 b - - 0 1" };
 
    Image board_img = LoadImage("../assets/img/chess-board.png");
    ImageResize(&board_img, 8*pieceSize, 8*pieceSize);

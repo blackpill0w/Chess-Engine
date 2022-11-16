@@ -7,7 +7,7 @@
 #include "./bitboard.hpp"
 #include "./bitopt.hpp"
 #include "./move_gen.hpp"
-//#include "./debug.hpp"
+#include "./debug.hpp"
 
 using std::string;
 
@@ -204,18 +204,25 @@ void Board::gen_board_legal_moves() {
    }
 
    // Handling en passant discovered check
-   // if (get_rank(king_sq) == get_rank(enpassant_square + 8*pawn_direction(color_to_play))) {
-   //    const Bitboard bb = get_rank(king_sq) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Rook));
-   //    if (bb) {
-   //       const Bitboard between = between_bb(king_sq, lsb(bb));
-   //       Bitboard pawns_between = sqbb(enpassant_square + 8*pawn_direction(color_to_play));
-   //       Bitboard mypawns_between = sqbb(enpassant_square + 8*pawn_direction(color_to_play));
-   //       if (popcnt(between) == 2 && between & piecesBB[WP] && between & piecesBB[BP]) {
-   //       }
-   //    }
-   // }
+   // TODO: improve this?
+   const Bitboard ep_pawn = enpassant_square == NoSquare ? 0 : sqbb(enpassant_square - 8*pawn_direction(color_to_play));
+   if (rank_bb(king_sq) & ep_pawn) {
+      const Bitboard possible_attacker = rank_bb(king_sq) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Rook));
+      if (possible_attacker) {
+         print_bb(possible_attacker);
+         const Square attacker_sq = lsb(possible_attacker);
+         const Bitboard between = between_bb(king_sq, attacker_sq) & ~sqbb(attacker_sq);
+         if (
+            popcnt(between & all_pieces()) == 2
+            && (ep_pawn & get_pieces(~color_to_play, Pawn))
+            && ((ep_pawn >> 1 | ep_pawn << 1) & get_pieces(color_to_play, Pawn))
+         ) {
+            enpassant_square = NoSquare;
+         }
+      }
+   }
 
-   for (Square sq = A1; sq < H8; ++sq) {
+   for (Square sq = A1; sq <= H8; ++sq) {
       if (get_piece_color(sq) == color_to_play) {
          const Bitboard ep = get_piece_type(sq) == Pawn ? sqbb(enpassant_square) : 0;
          PieceMoves pm{ sq, gen_piece_moves(sq, all_pieces() | ep, get_pieces(color_to_play, NoType)) };
@@ -234,24 +241,24 @@ void Board::gen_board_legal_moves() {
    limit_moves_of_pinned_pieces();
 }
 
-static void handle_castling_rights_changes(Board *b, PieceColor myc, Square from, Square to) {
-   if (b->get_piece_type(from) == King) {
-      b->cr &= ~(myc == White ? WhiteCastling : BlackCastling);
+static void handle_castling_rights_changes(Board &b, PieceColor myc, Square from, Square to) {
+   if (b.get_piece_type(from) == King) {
+      b.cr &= ~(myc == White ? WhiteCastling : BlackCastling);
    }
-   else if (b->get_piece_type(from) == Rook) {
+   else if (b.get_piece_type(from) == Rook) {
       if (sqbb(from) & fileH) {
-         b->cr &= ~(myc == White ? White_OO : Black_OO);
+         b.cr &= ~(myc == White ? White_OO : Black_OO);
       }
       else if (sqbb(from) & fileA) {
-         b->cr &= ~(myc == White ? White_OOO : Black_OOO);
+         b.cr &= ~(myc == White ? White_OOO : Black_OOO);
       }
    }
 }
 
-static void change_piece_pos(Board *b, Square from, Square to) {
-   int i = b->get_pieceBB_index(from);
-   unsetbit(b->piecesBB[i], from);
-   setbit(b->piecesBB[i], to);
+static void change_piece_pos(Board &b, Square from, Square to) {
+   int i = b.get_pieceBB_index(from);
+   unsetbit(b.piecesBB[i], from);
+   setbit(b.piecesBB[i], to);
 }
 
 Board::MoveErr Board::make_move(const Square from, const Square to) {
@@ -278,15 +285,15 @@ Board::MoveErr Board::make_move(const Square from, const Square to) {
          }
          else if (md_get_move_type(md) == Castling) { // take if en passant
             if (from < to) { // king side
-               change_piece_pos(this, to + 1, to - 1);
+               change_piece_pos(*this, to + 1, to - 1);
             }
             else { // queen side
-               change_piece_pos(this, to - 2, to + 1);
+               change_piece_pos(*this, to - 2, to + 1);
             }
          }
-         handle_castling_rights_changes(this, myc, from, to);
+         handle_castling_rights_changes(*this, myc, from, to);
 
-         change_piece_pos(this, from, to);
+         change_piece_pos(*this, from, to);
          move_history.push_back(md);
 
          color_to_play = ~myc;

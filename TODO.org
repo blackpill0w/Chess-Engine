@@ -4,7 +4,8 @@
 ** DONE checks
 ** DONE pins
 ** TODO make sure move generation works
-*** TODO en passant discovered check
+*** DONE en passant discovered checks
+** TODO Promotions
 
 * Search & Eval
 ** ??
