@@ -284,6 +284,7 @@ Board::MoveErr Board::make_move(const Square from, const Square to, const PieceT
             enpassant_square = from + 8*pawn_direction(myc);
          }
          else if (md_get_move_type(md) == Promotion) {
+            assert(promote_to == Queen || promote_to == Rook || promote_to == Bishop || promote_to == Knight);
             remove_piece_at(from);
             piecesBB.at(promote_to + (color_to_play == White ? 0 : 6)) |= sqbb(to);
          }
