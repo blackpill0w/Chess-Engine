@@ -2,8 +2,8 @@
 ** DONE take piece when en passant is played
 ** DONE castling
 ** DONE checks
-** TODO pins
-** ...
+** DONE pins
+** TODO make sure move generation works
 
 * Search & Eval
 ** ??
