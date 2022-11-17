@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <algorithm>
 
 #include "./utils.hpp"
 #include "./bitboard.hpp"
@@ -10,9 +11,11 @@
 #include "./debug.hpp"
 
 using std::string;
+using std::find_if;
 
 namespace Chess
 {
+
 Board::Board (const string &FEN)
    : piecesBB{}, enpassant_square{NoSquare}, color_to_play{White},
      move_history{}, movelist{}, cr{AnyCastling}, attacked_by_enemy{},
@@ -21,6 +24,7 @@ Board::Board (const string &FEN)
    move_history.reserve(64);
    movelist.reserve(64);
    load_fen(FEN);
+   print_bb(cr);
 }
 
 Bitboard Board::white_pieces() const {
@@ -82,6 +86,10 @@ size_t Board::get_pieceBB_index(const Square sq) const {
    return invalid_index;
 }
 
+size_t Board::get_pieceBB_index(const PieceType pt, const PieceColor c) const {
+   return pt + (c == White ? 0 : 6);
+}
+
 PieceColor Board::get_piece_color(const Square sq) const {
    return sqbb(sq) & white_pieces() ? White : sqbb(sq) & black_pieces() ? Black : NoColor;
 }
@@ -97,6 +105,7 @@ void Board::remove_piece_at(const Square sq) {
 MoveData Board::gen_move_data(const Square from, const Square to) const {
    MoveType mt = Normal;
    PieceType pt = get_piece_type(from);
+   PieceType taken_pt = get_piece_type(to);
    if (pt == Pawn) {
       if (to <= H1 || to >= A8) {
          mt = Promotion;
@@ -108,7 +117,7 @@ MoveData Board::gen_move_data(const Square from, const Square to) const {
    else if (pt == King && abs((int) (to - from)) == 2) {
       mt = Castling;
    }
-   return new_md(from, to, Queen, mt);
+   return new_md(from, to, Queen, mt, taken_pt, cr);
 }
 
 Bitboard Board::attackers_of(const Square sq) const {
@@ -162,12 +171,12 @@ void Board::limit_moves_of_pinned_pieces() {
          const Square pinner = pop_lsb(i);
          const Bitboard between = between_bb(king_sq, pinner);
          if (!more_than_one(between & all_pieces() & ~sqbb(pinner))) {
-            for (auto& pm : movelist) {
-               if (0 != (sqbb(pm.pos) & between)) {
-                  pm.possible_moves &= between;
-                  break;
-               }
-            }
+            auto pm = find_if(
+               movelist.begin(),
+               movelist.end(),
+               [&](PieceMoves &pm){ return 0 != (sqbb(pm.pos) & between); }
+            );
+            pm->possible_moves &= between;
          }
       }
    }
@@ -209,7 +218,6 @@ void Board::gen_board_legal_moves() {
    if (rank_bb(king_sq) & ep_pawn) {
       const Bitboard possible_attacker = rank_bb(king_sq) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Rook));
       if (possible_attacker) {
-         print_bb(possible_attacker);
          const Square attacker_sq = lsb(possible_attacker);
          const Bitboard between = between_bb(king_sq, attacker_sq) & ~sqbb(attacker_sq);
          if (
@@ -255,60 +263,105 @@ static void handle_castling_rights_changes(Board &b, PieceColor myc, Square from
    }
 }
 
-static void change_piece_pos(Board &b, Square from, Square to) {
-   int i = b.get_pieceBB_index(from);
-   unsetbit(b.piecesBB[i], from);
-   setbit(b.piecesBB[i], to);
+void Board::change_piece_pos(Square from, Square to) {
+   const int i = get_pieceBB_index(from);
+   unsetbit(piecesBB[i], from);
+   setbit(piecesBB[i], to);
 }
 
-Board::MoveErr Board::make_move(const Square from, const Square to, const PieceType promote_to) {
-   MoveErr err = InavlidMove;
-   for (size_t i = 0; i < movelist.size(); ++i) {
-      if (movelist.at(i).pos == from
-          && (movelist.at(i).possible_moves & sqbb(to))
-      ) {
-         err = NoError;
+BoardState Board::make_move(const Square from, const Square to, const PieceType promote_to) {
+   auto x = find_if(
+      movelist.begin(),
+      movelist.end(),
+      [&](PieceMoves &pm){ return pm.pos == from && (pm.possible_moves & sqbb(to)); }
+   );
+   if (x == movelist.end()) {
+      return InavlidMove;
+   }
 
-         PieceColor myc   = get_piece_color(from);
-         MoveData md      = gen_move_data(from, to);
-         enpassant_square = NoSquare;
+   PieceColor myc   = get_piece_color(from);
+   MoveData md      = gen_move_data(from, to);
+   enpassant_square = NoSquare;
 
-         // check if we should take a piece
-         if (get_piece_color(to) == ~myc) {
-            remove_piece_at(to);
-         }
-         else if (md_get_move_type(md) == En_passant) { // take if en passant
-            remove_piece_at(to - 8*pawn_direction(myc));
-         }
-         else if (get_piece_type(from) == Pawn && abs((int) (from - to)) == 8*2) {
-            enpassant_square = from + 8*pawn_direction(myc);
-         }
-         else if (md_get_move_type(md) == Promotion) {
-            assert(promote_to == Queen || promote_to == Rook || promote_to == Bishop || promote_to == Knight);
-            remove_piece_at(from);
-            piecesBB.at(promote_to + (color_to_play == White ? 0 : 6)) |= sqbb(to);
-         }
-         else if (md_get_move_type(md) == Castling) {
-            if (from < to) { // king side
-               change_piece_pos(*this, to + 1, to - 1);
-            }
-            else { // queen side
-               change_piece_pos(*this, to - 2, to + 1);
-            }
-         }
-         handle_castling_rights_changes(*this, myc, from, to);
-
-         if (md_get_move_type(md) != Promotion) change_piece_pos(*this, from, to);
-         move_history.push_back(md);
-
-         color_to_play = ~myc;
-         gen_board_legal_moves();
+   // check if we should take a piece
+   if (get_piece_color(to) == ~myc) {
+      remove_piece_at(to);
+   }
+   else if (md_get_move_type(md) == En_passant) { // take if en passant
+      remove_piece_at(to - 8*pawn_direction(myc));
+   }
+   else if (get_piece_type(from) == Pawn && abs((int) (from - to)) == 8*2) {
+      enpassant_square = from + 8*pawn_direction(myc);
+   }
+   else if (md_get_move_type(md) == Promotion) {
+      assert(promote_to == Queen || promote_to == Rook || promote_to == Bishop || promote_to == Knight);
+      remove_piece_at(from);
+      piecesBB.at(promote_to + (color_to_play == White ? 0 : 6)) |= sqbb(to);
+   }
+   else if (md_get_move_type(md) == Castling) {
+      if (from < to) { // king side
+         change_piece_pos(to + 1, to - 1);
+      }
+      else { // queen side
+         change_piece_pos(to - 2, to + 1);
       }
    }
-   if (err) {
-      std::cerr << "--- Invalid move.\n\n";
+   handle_castling_rights_changes(*this, myc, from, to);
+
+   if (md_get_move_type(md) != Promotion) change_piece_pos(from, to);
+   move_history.push_back(md);
+
+   color_to_play = ~myc;
+   gen_board_legal_moves();
+
+   return NoErr;
+}
+
+BoardState Board::unmake_move() {
+   if (move_history.size() == 0) return NoMoveToUnmake;
+
+   color_to_play = ~color_to_play;
+   const int i = color_to_play == White ? 0 : 6;
+   MoveData md = move_history[move_history.size() - 1];
+   move_history.pop_back();
+
+   const Square from = md_get_square_from(md);
+   const Square to = md_get_square_to(md);
+   const PieceType taken_pt = md_get_taken_piece_type(md);
+
+   if (md_get_move_type(md) == Promotion) {
+      cout << "promotion unmake" << std::endl;
+      setbit(piecesBB[Pawn + i], from);
+      unsetbit(piecesBB[md_get_promotion_type(md) + i], to);
    }
-   return err;
+   else if (md_get_move_type(md) == En_passant) {
+      cout << "en passant unmake" << std::endl;
+      change_piece_pos(to, from);
+      piecesBB[get_pieceBB_index(Pawn, ~color_to_play)] |= sqbb(to - 8*pawn_direction(color_to_play));
+      enpassant_square = to;
+   }
+   else if (md_get_move_type(md) == Castling) {
+      cout << "castle unmake" << std::endl;
+      if (to > from) { // king side
+         change_piece_pos(to, from);
+         change_piece_pos(to - 1, to + 1); // rook
+      }
+      else {
+         change_piece_pos(to, from);
+         change_piece_pos(to + 1, to - 2); // rook
+      }
+   }
+   else {
+      change_piece_pos(to, from);
+      if (taken_pt != NoType) {
+         cout << "piece was taken" << std::endl;
+         setbit(piecesBB[taken_pt + color_to_play == White ? 6 : 0], to);
+      }
+   }
+   cr = md_get_castling_rights(md);
+   print_bb(cr);
+   gen_board_legal_moves();
+   return NoErr;
 }
 
 } // namespace Chess

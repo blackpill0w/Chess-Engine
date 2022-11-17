@@ -8,8 +8,8 @@
 namespace Chess {
 
 static size_t gettok_index(string &str, const string &delim);
-static void fen_add_pieces(Board *b, const string &fen_pieces);
-static void fen_set_castling_rights(Board *b, const string &cr);
+static void fen_add_pieces(Board &b, const string &fen_pieces);
+static void fen_set_castling_rights(Board &b, const string &cr);
 
 void Board::load_fen(string FEN) {
    if (!move_history.empty()) {
@@ -21,11 +21,11 @@ void Board::load_fen(string FEN) {
       fprintf(stderr, "Error: invalid FEN notation string.\n");
       exit(1);
    }
-   fen_add_pieces(this, FEN.substr(0, gettok_index(FEN, " ")));
+   fen_add_pieces(*this, FEN.substr(0, gettok_index(FEN, " ")));
 
    color_to_play = FEN.substr(0, gettok_index(FEN, " "))[0] == 'w' ? White : Black;
 
-   fen_set_castling_rights(this, FEN.substr(0, gettok_index(FEN, " ")));
+   fen_set_castling_rights(*this, FEN.substr(0, gettok_index(FEN, " ")));
 
    gen_board_legal_moves();
 }
@@ -37,7 +37,7 @@ size_t gettok_index(string &str, const string &delim) {
     return i;
 }
 
-void fen_add_pieces(Board *b, const string &fen_pieces) {
+void fen_add_pieces(Board &b, const string &fen_pieces) {
    int x = 0;
    int y = 7;
    for (auto c : fen_pieces) {
@@ -60,28 +60,29 @@ void fen_add_pieces(Board *b, const string &fen_pieces) {
             i += 6;
          }
          const Bitboard bb = 1ull << (x + y*8);
-         b->piecesBB[i] |= bb;
+         b.piecesBB[i] |= bb;
          ++x;
       }
    }
 }
 
-void fen_set_castling_rights(Board *b, const string &cr) {
+void fen_set_castling_rights(Board &b, const string &cr) {
+   b.cr = NoCastling;
    if (cr[0] == '-') {
-      b->cr = NoCastling;
+      return;
    }
    for (auto c : cr) {
       if (c == 'K') {
-         b->cr |= White_OO;
+         b.cr |= White_OO;
       }
       else if (c == 'Q') {
-         b->cr |= White_OOO;
+         b.cr |= White_OOO;
       }
       else if (c == 'k') {
-         b->cr |= Black_OO;
+         b.cr |= Black_OO;
       }
       else if (c == 'q') {
-         b->cr |= Black_OOO;
+         b.cr |= Black_OOO;
       }
    }
 }

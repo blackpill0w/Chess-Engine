@@ -22,6 +22,7 @@ int get_piece_index_at(vector<ChessPiece>& pieces, Vector2 p);
 Vector2 square_to_coordinates(Square sq);
 Square coordinates_to_square(Vector2 v);
 void load_chess_textures(array<Texture2D, 12> &txtrs, const array<string, 12> &imgs);
+void load_pieces_from_board(Board &b, vector<ChessPiece> &pieces, array<Texture2D, 12> &txtrs);
 
 constexpr int pieceSize    = 60;
 constexpr int winW         = 8*pieceSize;
@@ -57,7 +58,7 @@ int main(void) {
 
    //Board b{ Chess::standard_chess };
    //Board b { "3k4/8/3Pq3/4N3/3B2R1/6K1/3Q4/8 w - - 0 1" };
-   Board b{ "6k1/4p3/8/K2P1nnr/8/8/8/8 w - - 0 1" };
+   Board b{ "6k1/4p3/8/8/8/8/8/R3K2R w KQ - 0 1" };
 
    Image board_img = LoadImage("../assets/img/chess-board.png");
    ImageResize(&board_img, 8*pieceSize, 8*pieceSize);
@@ -67,17 +68,7 @@ int main(void) {
    vector<ChessPiece> pieces{};
    pieces.reserve(32);
 
-
-   for (Square sq = A1; sq <= H8; ++sq) {
-      PieceType t = b.get_piece_type(sq);
-      if (t != NoType) {
-         ChessPiece p = {
-            square_to_coordinates(sq),
-            &txtrs[t + (b.get_piece_color(sq) == White ? 0 : 6)],
-         };
-         pieces.push_back(p);
-      }
-   }
+   load_pieces_from_board(b, pieces, txtrs);
 
    int selected_piece = -1;
    int selected_piece_moves = -1;
@@ -103,24 +94,19 @@ int main(void) {
       }
       else if (selected_piece != -1 && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
          to = coordinates_to_square(GetMousePosition());
-         if (b.make_move(from, to) == Board::NoError) {
-            pieces.clear();
-            for (Square sq = A1; sq <= H8; ++sq) {
-               const PieceType t = b.get_piece_type(sq);
-               if (t != NoType) {
-                  ChessPiece p = {
-                     square_to_coordinates(sq),
-                     &txtrs[t + (b.get_piece_color(sq) == White ? 0 : 6)],
-                  };
-                  pieces.push_back(p);
-               }
-            }
+         if (b.make_move(from, to) == Chess::NoErr) {
+            load_pieces_from_board(b, pieces, txtrs);
          }
          else {
             pieces.at(selected_piece).pos = square_to_coordinates(from);
          }
          selected_piece = -1;
          selected_piece_moves = -1;
+      }
+      if (IsKeyPressed(KEY_U)) {
+         if (b.unmake_move() == Chess::NoErr) {
+            load_pieces_from_board(b, pieces, txtrs);
+         }
       }
       if (selected_piece != -1 && IsMouseButtonDown(MOUSE_LEFT_BUTTON)) {
          if (mouse_pos.x > pieceMinW && mouse_pos.x < pieceMaxW) {
@@ -144,7 +130,7 @@ int main(void) {
          // Draw available moves if a piece is selected
          if (selected_piece_moves != -1) {
             for (Square sq = A1; sq <= H8; ++sq) {
-               if (b.movelist.at(selected_piece_moves).possible_moves & (1ull << sq)) {
+               if (b.movelist.at(selected_piece_moves).possible_moves & sqbb(sq)) {
                   DrawRectangleV(square_to_coordinates(sq),(Vector2) {pieceSize, pieceSize}, spm_color);
                }
             }
@@ -197,5 +183,19 @@ void load_chess_textures(array<Texture2D, 12>& txtrs, const array<string, 12>& i
       ImageResize(&img, pieceSize, pieceSize);
       txtrs[i] = LoadTextureFromImage(img);
       UnloadImage(img);
+   }
+}
+
+void load_pieces_from_board(Board &b, vector<ChessPiece> &pieces, array<Texture2D, 12> &txtrs) {
+   pieces.clear();
+   for (Square sq = A1; sq <= H8; ++sq) {
+      const PieceType t = b.get_piece_type(sq);
+      if (t != NoType) {
+         ChessPiece p = {
+            square_to_coordinates(sq),
+            &txtrs[t + (b.get_piece_color(sq) == White ? 0 : 6)],
+         };
+         pieces.push_back(p);
+      }
    }
 }

@@ -30,6 +30,8 @@ struct PieceMoves {
 
 inline const string standard_chess = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
+enum BoardState { NoErr, InavlidMove, NoMoveToUnmake, Draw, CheckMate };
+
 struct Board {
 public:
    // A list of bitboards, one for each color-piece combination
@@ -94,6 +96,7 @@ public:
       Return the index of the bitboard containing the piece if it exists.
    */
    size_t get_pieceBB_index(const Square sq) const;
+   size_t get_pieceBB_index(const PieceType pt, const PieceColor c) const;
 
    /*!
       Get color of a piece given its positions.
@@ -136,12 +139,18 @@ public:
    */
    Bitboard attackers_of(const Square sq) const;
 
-   enum MoveErr { NoError, InavlidMove };
+   /*
+      TODO
+   */
+   void change_piece_pos(Square from, Square to);
+
    /*!
       Make a move.
       @return `NoError` on success, `InvalidMove` if move is invalid.
    */
-   MoveErr make_move(const Square from, const Square to, const PieceType promote_to = Queen);
+   BoardState make_move(const Square from, const Square to, const PieceType promote_to = Queen);
+
+   BoardState unmake_move();
 
 };
 
