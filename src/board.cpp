@@ -24,7 +24,6 @@ Board::Board (const string &FEN)
    move_history.reserve(64);
    movelist.reserve(64);
    load_fen(FEN);
-   print_bb(cr);
 }
 
 Bitboard Board::white_pieces() const {
@@ -102,7 +101,7 @@ void Board::remove_piece_at(const Square sq) {
    unsetbit(piecesBB[get_pieceBB_index(sq)], sq);
 }
 
-MoveData Board::gen_move_data(const Square from, const Square to) const {
+MoveData Board::gen_move_data(const Square from, const Square to, const PieceType promote_to) const {
    MoveType mt = Normal;
    PieceType pt = get_piece_type(from);
    PieceType taken_pt = get_piece_type(to);
@@ -117,7 +116,8 @@ MoveData Board::gen_move_data(const Square from, const Square to) const {
    else if (pt == King && abs((int) (to - from)) == 2) {
       mt = Castling;
    }
-   return new_md(from, to, Queen, mt, taken_pt, cr);
+   //auto md = new_md(from, to, promote_to, mt, taken_pt, cr, enpassant_square);
+   return new_md(from, to, promote_to, mt, taken_pt, cr, enpassant_square);
 }
 
 Bitboard Board::attackers_of(const Square sq) const {
@@ -249,45 +249,56 @@ void Board::gen_board_legal_moves() {
    limit_moves_of_pinned_pieces();
 }
 
+void Board::change_piece_pos(Square from, Square to) {
+   const int i = get_pieceBB_index(from);
+   if (i == invalid_index) {
+      std::cerr << "Invalid read\n";
+      print_board(*this);
+      std::cerr << from << " -> " << to << '\n';
+      exit(1);
+   }
+   unsetbit(piecesBB[i], from);
+   setbit(piecesBB[i], to);
+}
+
+bool Board::is_valid_move(const Square from, const Square to) const {
+   auto x = find_if(
+      movelist.begin(),
+      movelist.end(),
+      [&](const PieceMoves &pm){ return pm.pos == from && (sqbb(to) & pm.possible_moves); }
+   );
+   return x != movelist.end();
+}
+
 static void handle_castling_rights_changes(Board &b, PieceColor myc, Square from, Square to) {
    if (b.get_piece_type(from) == King) {
       b.cr &= ~(myc == White ? WhiteCastling : BlackCastling);
    }
    else if (b.get_piece_type(from) == Rook) {
-      if (sqbb(from) & fileH) {
+      const Square king_sq = lsb(b.get_pieces(myc, King));
+      if (from > king_sq) { // king side rook
          b.cr &= ~(myc == White ? White_OO : Black_OO);
       }
-      else if (sqbb(from) & fileA) {
+      else if (from < king_sq) { // queen side rook
          b.cr &= ~(myc == White ? White_OOO : Black_OOO);
       }
    }
 }
 
-void Board::change_piece_pos(Square from, Square to) {
-   const int i = get_pieceBB_index(from);
-   unsetbit(piecesBB[i], from);
-   setbit(piecesBB[i], to);
-}
-
 BoardState Board::make_move(const Square from, const Square to, const PieceType promote_to) {
-   auto x = find_if(
-      movelist.begin(),
-      movelist.end(),
-      [&](PieceMoves &pm){ return pm.pos == from && (pm.possible_moves & sqbb(to)); }
-   );
-   if (x == movelist.end()) {
+   if (!is_valid_move(from, to)) {
       return InavlidMove;
    }
 
    PieceColor myc   = get_piece_color(from);
-   MoveData md      = gen_move_data(from, to);
+   MoveData md      = gen_move_data(from, to, promote_to);
    enpassant_square = NoSquare;
 
    // check if we should take a piece
    if (get_piece_color(to) == ~myc) {
       remove_piece_at(to);
    }
-   else if (md_get_move_type(md) == En_passant) { // take if en passant
+   if (md_get_move_type(md) == En_passant) { // take if en passant
       remove_piece_at(to - 8*pawn_direction(myc));
    }
    else if (get_piece_type(from) == Pawn && abs((int) (from - to)) == 8*2) {
@@ -330,18 +341,15 @@ BoardState Board::unmake_move() {
    const PieceType taken_pt = md_get_taken_piece_type(md);
 
    if (md_get_move_type(md) == Promotion) {
-      cout << "promotion unmake" << std::endl;
       setbit(piecesBB[Pawn + i], from);
-      unsetbit(piecesBB[md_get_promotion_type(md) + i], to);
+      unsetbit(piecesBB[get_pieceBB_index(md_get_promotion_type(md), color_to_play)], to);
    }
    else if (md_get_move_type(md) == En_passant) {
-      cout << "en passant unmake" << std::endl;
       change_piece_pos(to, from);
       piecesBB[get_pieceBB_index(Pawn, ~color_to_play)] |= sqbb(to - 8*pawn_direction(color_to_play));
       enpassant_square = to;
    }
    else if (md_get_move_type(md) == Castling) {
-      cout << "castle unmake" << std::endl;
       if (to > from) { // king side
          change_piece_pos(to, from);
          change_piece_pos(to - 1, to + 1); // rook
@@ -353,13 +361,12 @@ BoardState Board::unmake_move() {
    }
    else {
       change_piece_pos(to, from);
-      if (taken_pt != NoType) {
-         cout << "piece was taken" << std::endl;
-         setbit(piecesBB[taken_pt + color_to_play == White ? 6 : 0], to);
-      }
+   }
+   if (taken_pt != NoType) {
+      piecesBB[get_pieceBB_index(taken_pt, ~color_to_play)] |= sqbb(to);
    }
    cr = md_get_castling_rights(md);
-   print_bb(cr);
+   enpassant_square = md_get_ep_square(md);
    gen_board_legal_moves();
    return NoErr;
 }

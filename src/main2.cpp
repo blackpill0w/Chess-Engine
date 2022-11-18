@@ -23,6 +23,7 @@ Vector2 square_to_coordinates(Square sq);
 Square coordinates_to_square(Vector2 v);
 void load_chess_textures(array<Texture2D, 12> &txtrs, const array<string, 12> &imgs);
 void load_pieces_from_board(Board &b, vector<ChessPiece> &pieces, array<Texture2D, 12> &txtrs);
+//Chess::PieceType get_promotion_type(raylib::Window &win);
 
 constexpr int pieceSize    = 60;
 constexpr int winW         = 8*pieceSize;
@@ -57,8 +58,8 @@ int main(void) {
    load_chess_textures(txtrs, chess_imgs);
 
    //Board b{ Chess::standard_chess };
-   //Board b { "3k4/8/3Pq3/4N3/3B2R1/6K1/3Q4/8 w - - 0 1" };
-   Board b{ "6k1/4p3/8/8/8/8/8/R3K2R w KQ - 0 1" };
+   Board b { "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1" };
+   //Board b{ "5k2/8/8/3qP3/b7/1N3Q2/8/3K1B2 w - - 0 1" };
 
    Image board_img = LoadImage("../assets/img/chess-board.png");
    ImageResize(&board_img, 8*pieceSize, 8*pieceSize);
@@ -77,6 +78,7 @@ int main(void) {
    Vector2 mouse_pos = {0};
    Square from = Chess::NoSquare;
    Square to = Chess::NoSquare;
+   PieceType pt = Queen; // promotion type
 
    while (!win.ShouldClose()) {
       mouse_pos = GetMousePosition();
@@ -94,7 +96,30 @@ int main(void) {
       }
       else if (selected_piece != -1 && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
          to = coordinates_to_square(GetMousePosition());
-         if (b.make_move(from, to) == Chess::NoErr) {
+         // get promotion type if necessary
+         if (b.get_piece_type(from) == Pawn && (to <= H1 || to >= A8) && b.is_valid_move(from, to)) {
+            while (!win.ShouldClose()) {
+               if (IsKeyPressed(KEY_Q)) {
+                  pt = Queen;
+                  break;
+               }
+               else if (IsKeyPressed(KEY_B)) {
+                  pt = Bishop;
+                  break;
+               }
+               else if (IsKeyPressed(KEY_R)) {
+                  pt = Rook;
+                  break;
+               }
+               else if (IsKeyPressed(KEY_N)) {
+                  pt = Knight;
+                  break;
+               }
+               BeginDrawing();
+               EndDrawing();
+            }
+         }
+         if (b.make_move(from, to, pt) == Chess::NoErr) {
             load_pieces_from_board(b, pieces, txtrs);
          }
          else {
@@ -136,7 +161,7 @@ int main(void) {
             }
          }
          // Draw pieces
-         for (int i = 0; i < pieces.size(); ++i) {
+         for (int i = 0; size_t(i) < pieces.size(); ++i) {
             if (i != selected_piece) DrawTextureV(*pieces.at(i).txtr, pieces.at(i).pos, WHITE);
          }
          if (selected_piece != -1) DrawTextureV(*pieces.at(selected_piece).txtr, pieces.at(selected_piece).pos, WHITE);

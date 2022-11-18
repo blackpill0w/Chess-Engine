@@ -120,45 +120,51 @@ inline constexpr Bitboard BQSCastlingSquaresBB = (1ull << C8) | (1ull << D8);
   bit 6-11: the target square
   bit 12-13: promotion type
   bit 14-15: special move flag: promotion (1), en passant (2), castling (3)
-  bit 16-19: type of piece taken if there is any
-  bit 20-24: castling rights before making the move
+  bit 16-18: type of piece taken if there is any
+  bit 19-22: castling rights before making the move
+  bit 23-29: en passant target (6 bits because +1 for NoSquare)
   // todo: 50 move rule
 */
 using MoveData = uint32_t;
-inline constexpr Bitboard md_from_mask           = 63;
-inline constexpr Bitboard md_to_mask             = 63 << 6;
-inline constexpr Bitboard md_promotion_type_mask = 3 << 12;
-inline constexpr Bitboard md_move_type_mask      = 3 << 14;
-inline constexpr Bitboard md_taken_piece_type    = 7 << 16;
-inline constexpr Bitboard md_castling_rights     = 15 << 20;
-
 enum MoveType {
    Normal,
    Promotion,
    En_passant,
    Castling,
 };
+// masks
+inline constexpr Bitboard md_from             = 63;
+inline constexpr Bitboard md_to               = 63 << 6;
+inline constexpr Bitboard md_promotion_type   = 3 << 12;
+inline constexpr Bitboard md_move_type        = 3 << 14;
+inline constexpr Bitboard md_taken_piece_type = 7 << 16;
+inline constexpr Bitboard md_castling_rights  = 15 << 19;
+inline constexpr Bitboard md_ep_square        = 127 << 23;
 
-inline constexpr MoveData new_md(Square from, Square to, PieceType pt, MoveType mt, PieceType taken, CastlingRights cr) {
-   return (cr << 20) | (taken << 16) | (mt << 14) | (pt << 12) | (to << 6) | from;
+inline constexpr MoveData new_md(Square from, Square to, PieceType pt, MoveType mt, PieceType taken,
+                                 CastlingRights cr, Square ep_square) {
+   return (ep_square << 23) | (cr << 19) | (taken << 16) | (mt << 14) | (pt << 12) | (to << 6) | from;
 }
 inline constexpr Square md_get_square_from(MoveData m) {
-   return Square(m & md_from_mask);
+   return Square(m & md_from);
 }
 inline constexpr Square md_get_square_to(MoveData m) {
-   return Square((m & md_to_mask) >> 6);
+   return Square((m & md_to) >> 6);
 }
 inline constexpr PieceType md_get_promotion_type(MoveData m) {
-   return PieceType((m & md_promotion_type_mask) >> 12);
+   return PieceType((m & md_promotion_type) >> 12);
 }
 inline constexpr MoveType md_get_move_type(MoveData m) {
-   return MoveType((m & md_move_type_mask) >> 14);
+   return MoveType((m & md_move_type) >> 14);
 }
 inline constexpr PieceType md_get_taken_piece_type(MoveData m) {
    return PieceType((m & md_taken_piece_type) >> 16);
 }
 inline constexpr CastlingRights md_get_castling_rights(MoveData m) {
-   return CastlingRights((m & md_castling_rights) >> 20);
+   return CastlingRights((m & md_castling_rights) >> 19);
+}
+inline constexpr Square md_get_ep_square(MoveData m) {
+   return Square((m & md_ep_square) >> 23);
 }
 
 /*

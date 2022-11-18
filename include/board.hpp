@@ -132,7 +132,7 @@ public:
    /*!
       TODO
    */
-   MoveData gen_move_data(const Square from, const Square to) const;
+   MoveData gen_move_data(const Square from, const Square to, const PieceType promote_to) const;
 
    /*!
       Gets attackers of a square.
@@ -143,6 +143,11 @@ public:
       TODO
    */
    void change_piece_pos(Square from, Square to);
+
+   /*
+      TODO
+   */
+   bool is_valid_move(const Square from, const Square to) const;
 
    /*!
       Make a move.
