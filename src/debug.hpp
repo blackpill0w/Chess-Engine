@@ -24,6 +24,16 @@ inline std::ostream& operator<<(std::ostream& os, PieceType pt) {
       : "NoType"
    );
 }
+inline string pt_to_str(const PieceType pt) {
+   return (pt == King ? "King"
+      : pt == Queen ? "Queen"
+      : pt == Rook ? "Rook"
+      : pt == Bishop ? "Bishop"
+      : pt == Knight ? "Knight"
+      : pt == Pawn ? "Pawn"
+      : "");
+}
+
 
 inline std::ostream& operator<<(std::ostream& os, Square sq) {
    if (sq == NoSquare) {
@@ -70,21 +80,21 @@ static void print_board(Board& b, PieceColor p = NoColor) {
 struct Move {
    Square from;
    Square to;
-   PieceType pt = Queen;
-   Move(Square from, Square to) : from{ from }, to{ to } {};
-   Move() : from{ NoSquare }, to{ NoSquare } {};
+   PieceType pt;
+   Move(Square from, Square to, PieceType pt = Queen) : from{ from }, to{ to }, pt{ pt } {};
+   Move() : from{ NoSquare }, to{ NoSquare }, pt{ Queen } {};
 };
 
 [[maybe_unused]]
 inline string sqstr(const Square sq) {
-   string str = "xx";
-   str[0] = 'A' + (sq%8);
-   str[1] = '1' + (sq/8);
+   string str = "a1";
+   str[0] += sq%8;
+   str[1] += sq/8;
    return str;
 }
-
+#include <cstdio>
 [[maybe_unused]]
-inline Bitboard perft(Board &b, int depth, string prev = "") {
+inline Bitboard perft(Board &b, int depth, int i = 0) {
    if (depth == 0) return 1ull;
 
    int pos_num = 0;
@@ -93,30 +103,36 @@ inline Bitboard perft(Board &b, int depth, string prev = "") {
 
    for (auto pm: b.movelist) {
       while (pm.possible_moves) {
-         moves.push_back( {pm.pos, pop_lsb(pm.possible_moves)} );
-         Move *move = &moves[moves.size() - 1];
-         if (b.get_piece_type(move->from) == Pawn && (move->to <= H1 || move->to >= A8)) {
-
+         Move m{ pm.pos, pop_lsb(pm.possible_moves), Queen };
+         Move *move = &m;
+         if (b.get_piece_type(pm.pos) == Pawn && (move->to <= H1 || move->to >= A8)) {
+            m.pt = Queen;
             // promotion to other pieces
             for (auto pt: { Rook, Bishop, Knight }) {
                Move m = *move;
                m.pt = pt;
-               moves.push_back(m);
+               moves.emplace_back(m);
             }
          }
+         moves.emplace_back(m);
       }
    }
 
-   for (auto &move: moves) {
-      //print_board(b);
-      string prev2 = prev + sqstr(move.from) + " -> " + sqstr(move.to) + " ~~ ";
-      //cout << prev2 << '\n';
-      if (b.make_move(move.from, move.to, move.pt) == Chess::InavlidMove) {
+   string prev = sqstr(moves[i].from) + sqstr(moves[i].to);
+   for (size_t i = 0; i < moves.size(); ++i) {
+      if (b.get_piece_type(moves[i].from) == Pawn && (moves[i].to <= H1 || moves[i].to >= A8)) {
+         prev += pieces_char[moves[i].pt];
+      }
+      if (b.make_move(moves[i].from, moves[i].to, moves[i].pt) == Chess::InavlidMove) {
          cout << "invalid\n";
          exit(1);
       };
-      pos_num += perft(b, depth - 1, prev2);
+      int j = perft(b, depth - 1);
+      pos_num += j;
       b.unmake_move();
+   }
+   if (depth == i) {
+      printf("%5s %d\n", prev.c_str(), pos_num);
    }
    return pos_num;
 }

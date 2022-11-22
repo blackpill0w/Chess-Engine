@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
    // Perft test
    string fen{};
    cout << "Enter a fen string (std for standard chess): ";
-   cin >> fen;
+   std::getline(cin, fen);
    if (fen == "std") {
       fen = Chess::standard_chess;
    }
@@ -52,5 +52,5 @@ void timed_perft(Board &b, int depth) {
    duration<double, milli> exec_time_ms = t2 - t1;
    duration<double> exec_time_s = exec_time_ms;
    cout << "Nodes: " << nodes << '\n';
-   cout << "Calculated in: " << exec_time_s.count() << "s, or " << exec_time_ms.count() << "ms\n\n" ;
+   cout << "Calculated in: " << exec_time_s.count() << "s, or " << exec_time_ms.count() << "ms\n" ;
 }

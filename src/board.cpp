@@ -27,11 +27,11 @@ Board::Board (const string &FEN)
 }
 
 Bitboard Board::white_pieces() const {
-   return (piecesBB[WK] | piecesBB[WQ] | piecesBB[WR] | piecesBB[WB] | piecesBB[WN] | piecesBB[WP]);
+   return piecesBB[WK] | piecesBB[WQ] | piecesBB[WR] | piecesBB[WB] | piecesBB[WN] | piecesBB[WP];
 }
 
 Bitboard Board::black_pieces() const {
-   return (piecesBB[BK] | piecesBB[BQ] | piecesBB[BR] | piecesBB[BB] | piecesBB[BN] | piecesBB[BP]);
+   return piecesBB[BK] | piecesBB[BQ] | piecesBB[BR] | piecesBB[BB] | piecesBB[BN] | piecesBB[BP];
 }
 
 Bitboard Board::all_pieces() const {
@@ -116,7 +116,6 @@ MoveData Board::gen_move_data(const Square from, const Square to, const PieceTyp
    else if (pt == King && abs((int) (to - from)) == 2) {
       mt = Castling;
    }
-   //auto md = new_md(from, to, promote_to, mt, taken_pt, cr, enpassant_square);
    return new_md(from, to, promote_to, mt, taken_pt, cr, enpassant_square);
 }
 
@@ -243,7 +242,7 @@ void Board::gen_board_legal_moves() {
                pm.possible_moves &= ~(sqbb(sq + 2) | sqbb(sq - 2));
             }
          }
-         movelist.push_back(pm);
+         movelist.emplace_back(pm);
       }
    }
    limit_moves_of_pinned_pieces();
@@ -275,12 +274,19 @@ static void handle_castling_rights_changes(Board &b, PieceColor myc, Square from
       b.cr &= ~(myc == White ? WhiteCastling : BlackCastling);
    }
    else if (b.get_piece_type(from) == Rook) {
-      const Square king_sq = lsb(b.get_pieces(myc, King));
-      if (from > king_sq) { // king side rook
+      if (from == (myc == White ? H1 : H8)) { // king side rook
          b.cr &= ~(myc == White ? White_OO : Black_OO);
       }
-      else if (from < king_sq) { // queen side rook
+      else if (from == (myc == White ? A1 : A8)) { // queen side rook
          b.cr &= ~(myc == White ? White_OOO : Black_OOO);
+      }
+   }
+   if (b.get_piece_type(to) == Rook) { // rook was taken
+      if (to == (~myc == White ? H1 : H8)) { // king side rook
+         b.cr &= ~(~myc == White ? White_OO : Black_OO);
+      }
+      else if (to == (~myc == White ? A1 : A8)) { // queen side rook
+         b.cr &= ~(~myc == White ? White_OOO : Black_OOO);
       }
    }
 }
@@ -293,6 +299,7 @@ BoardState Board::make_move(const Square from, const Square to, const PieceType 
    PieceColor myc   = get_piece_color(from);
    MoveData md      = gen_move_data(from, to, promote_to);
    enpassant_square = NoSquare;
+   handle_castling_rights_changes(*this, myc, from, to);
 
    // check if we should take a piece
    if (get_piece_color(to) == ~myc) {
@@ -307,7 +314,7 @@ BoardState Board::make_move(const Square from, const Square to, const PieceType 
    else if (md_get_move_type(md) == Promotion) {
       assert(promote_to == Queen || promote_to == Rook || promote_to == Bishop || promote_to == Knight);
       remove_piece_at(from);
-      piecesBB.at(promote_to + (color_to_play == White ? 0 : 6)) |= sqbb(to);
+      piecesBB.at(get_pieceBB_index(promote_to, color_to_play)) |= sqbb(to);
    }
    else if (md_get_move_type(md) == Castling) {
       if (from < to) { // king side
@@ -317,10 +324,9 @@ BoardState Board::make_move(const Square from, const Square to, const PieceType 
          change_piece_pos(to - 2, to + 1);
       }
    }
-   handle_castling_rights_changes(*this, myc, from, to);
 
    if (md_get_move_type(md) != Promotion) change_piece_pos(from, to);
-   move_history.push_back(md);
+   move_history.emplace_back(md);
 
    color_to_play = ~myc;
    gen_board_legal_moves();

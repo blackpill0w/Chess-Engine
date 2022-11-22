@@ -60,6 +60,7 @@ int main(void) {
    //Board b{ Chess::standard_chess };
    Board b { "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1" };
    //Board b{ "5k2/8/8/3qP3/b7/1N3Q2/8/3K1B2 w - - 0 1" };
+   //Board b{"8/2p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1"};
 
    Image board_img = LoadImage("../assets/img/chess-board.png");
    ImageResize(&board_img, 8*pieceSize, 8*pieceSize);
@@ -220,7 +221,7 @@ void load_pieces_from_board(Board &b, vector<ChessPiece> &pieces, array<Texture2
             square_to_coordinates(sq),
             &txtrs[t + (b.get_piece_color(sq) == White ? 0 : 6)],
          };
-         pieces.push_back(p);
+         pieces.emplace_back(p);
       }
    }
 }

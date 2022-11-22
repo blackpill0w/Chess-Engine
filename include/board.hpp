@@ -49,7 +49,7 @@ public:
    // A bitboard containing the squares attacked by the enemy
    Bitboard attacked_by_enemy;
    // A bitboard containing the pieces putting the king (with color to play) in check
-   Checkers checkers;
+   Bitboard checkers;
    // This variable is used to restrict movement of pieces when in check, etc
    Bitboard possible_moves = ~0;
 public:

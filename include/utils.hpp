@@ -123,7 +123,7 @@ inline constexpr Bitboard BQSCastlingSquaresBB = (1ull << C8) | (1ull << D8);
   bit 16-18: type of piece taken if there is any
   bit 19-22: castling rights before making the move
   bit 23-29: en passant target (6 bits because +1 for NoSquare)
-  // todo: 50 move rule
+  todo: 50 move rule
 */
 using MoveData = uint32_t;
 enum MoveType {
@@ -165,27 +165,6 @@ inline constexpr CastlingRights md_get_castling_rights(MoveData m) {
 }
 inline constexpr Square md_get_ep_square(MoveData m) {
    return Square((m & md_ep_square) >> 23);
-}
-
-/*
-  0-5   bits: first checker position
-  6-8   bits: first checker piece type
-  9-14  bits: second checker position
-  15-17 bits: second checker piece type
-*/
-using Checkers = uint32_t;
-
-inline Checkers add_checker(const PieceType pt, const Square pos,
-                            const bool first = true, const Checkers c = 0) {
-   return first ? ((pt << 6) | pos) : (pt << 15) | (pos << 9) | c;
-}
-
-inline Square checkers_get_pos(const Checkers c, const bool first = true) {
-   return first ? Square(c & 63) : Square((c & (63 << 9)) >> 9);
-}
-
-inline PieceType checkers_get_pt(const Checkers c, const bool first = true) {
-   return first ? PieceType((c & (7 << 6)) >> 6) : PieceType((c & (7 << 15)) >> 15);
 }
 
 } // namespace Chess
