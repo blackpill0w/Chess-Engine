@@ -204,12 +204,8 @@ void Board::gen_board_legal_moves() {
    }
    // Checks
    const Bitboard attackers = attackers_of(king_sq);
-   if (more_than_one(attackers)) {
-      possible_moves = 0;
-   }
-   else if (attackers) {
-      possible_moves = between_bb(king_sq, lsb(attackers));
-   }
+   if (more_than_one(attackers)) possible_moves = 0;
+   else if (attackers) possible_moves = between_bb(king_sq, lsb(attackers));
 
    // Handling en passant discovered check
    // TODO: improve this?
@@ -233,7 +229,12 @@ void Board::gen_board_legal_moves() {
       if (get_piece_color(sq) == color_to_play) {
          const Bitboard ep = get_piece_type(sq) == Pawn ? sqbb(enpassant_square) : 0;
          PieceMoves pm{ sq, gen_piece_moves(sq, all_pieces() | ep, get_pieces(color_to_play, NoType)) };
-         if (sq != king_sq) {
+         if (get_piece_type(sq) == Pawn
+             && (((sqbb(enpassant_square) >> 8) & attackers) || ((sqbb(enpassant_square) << 8) & attackers))
+            ) {
+            pm.possible_moves &= possible_moves | sqbb(enpassant_square);
+         }
+         else if (sq != king_sq) {
             pm.possible_moves &= possible_moves;
          }
          else {
@@ -317,12 +318,10 @@ BoardState Board::make_move(const Square from, const Square to, const PieceType 
       piecesBB.at(get_pieceBB_index(promote_to, color_to_play)) |= sqbb(to);
    }
    else if (md_get_move_type(md) == Castling) {
-      if (from < to) { // king side
-         change_piece_pos(to + 1, to - 1);
-      }
-      else { // queen side
-         change_piece_pos(to - 2, to + 1);
-      }
+      // king side
+      if (from < to) change_piece_pos(to + 1, to - 1);
+      // queen side
+      else change_piece_pos(to - 2, to + 1);
    }
 
    if (md_get_move_type(md) != Promotion) change_piece_pos(from, to);

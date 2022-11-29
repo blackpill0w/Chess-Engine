@@ -13,12 +13,13 @@ using std::milli;
 void timed_perft(Board &b, int depth);
 
 int main(int argc, char **argv) {
-   //Board b{ standard_chess };
-   //Board b{ "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1" };
-   //Board b{ "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8" };
-   if (argc == 2) {
-      Board b{ "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8" };
-      int depth = argv[1][0] - '0';
+   // first arg is fen string, and second is depth
+   if (argc >= 2) {
+      string FEN = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8";
+      if (argc == 3) FEN = argv[1];
+      Board b{ FEN };
+      int depth = argv[2][0] - '0';
+      std::cout << depth << '\n';
       timed_perft(b, depth);
       return 0;
    }

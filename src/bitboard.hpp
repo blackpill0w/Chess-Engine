@@ -11,7 +11,7 @@ namespace Chess {
 
 constexpr bool more_than_one(Bitboard b) { return b & (b - 1); }
 
-// WARNING: the following three functions work only with GCC, Clang or ICC
+// WARNING: the following functions work only with GCC, Clang or ICC
 inline int popcnt(Bitboard b) {
    return __builtin_popcountll(b);
 }
