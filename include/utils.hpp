@@ -52,7 +52,7 @@ enum Square {
    A8, B8, C8, D8, E8, F8, G8, H8,
    SqNum = 64, NoSquare
 };
-inline constexpr Bitboard sqbb(Square sq) { return sq == NoSquare ? 0 : 1ull << sq; };
+inline constexpr Bitboard sqbb(Square sq) { return sq < A1 || sq > H8 ? 0 : 1ull << sq; };
 ENABLE_OPERATORS_ON(Square);
 
 enum File {

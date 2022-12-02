@@ -22,7 +22,7 @@ inline std::ostream& operator<<(std::ostream& os, PieceType pt) {
       : pt == Knight ? "Knight"
       : pt == Pawn ? "Pawn"
       : "NoType"
-   );
+      );
 }
 inline string pt_to_str(const PieceType pt) {
    return (pt == King ? "King"
@@ -132,8 +132,8 @@ inline Bitboard perft(Board &b, int depth, int original_depth = 0) {
       x = j;
       pos_num += j;
       b.unmake_move();
-      //if (!original_depth) printf("%s %d\n", prev.c_str(), x);
-      //else if (depth == original_depth - 1) printf("-- %s %d\n", prev.c_str(), x);
+      if (!original_depth) printf("%s %d\n", prev.c_str(), x);
+      else if (depth == original_depth - 1) printf("-- %s %d\n", prev.c_str(), x);
       //else if (depth == original_depth - 2) printf("-- -- %s %d\n", prev.c_str(), x);
       //else if (depth == original_depth - 3) printf("-- -- -- %s %d\n", prev.c_str(), x);
    }

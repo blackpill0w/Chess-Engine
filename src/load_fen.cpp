@@ -16,7 +16,7 @@ void Board::load_fen(string FEN) {
       move_history.clear();
    }
    const std::regex fen_regex{ "^([kqrbnpKQRBNP1-8]{1,8}\\/){7}[kqrbnpKQRBNP1-8]{1,8} "
-         "(w|b) (-|[KQkq]{1,4}) (-|([a-h][0-8])) [1-4]?[0-9] [0-9]{1,3}$" };
+         "(w|b) (-|[KQkq]{1,4}) (-|([a-h][0-8])) ([1-4]?[0-9] [0-9]{1,3})?$" };
    if (!std::regex_search(FEN, fen_regex)) {
       std::cerr << "Error: invalid FEN notation string.\n";
       std::cerr << "'" << FEN << "'" << std::endl;

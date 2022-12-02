@@ -144,6 +144,10 @@ Bitboard Board::gen_piece_moves(const Square sq, const Bitboard occ, const Bitbo
    }
    else if (pt == King) {
       res = gen_king_moves(sq, occ, mypieces, myc, cr);
+      const Bitboard sc = get_piece_color(sq) == White ? WKSCastlingSquaresBB : BKSCastlingSquaresBB;
+      const Bitboard lc = sc == WKSCastlingSquaresBB ? WQSCastlingSquaresBB : BQSCastlingSquaresBB;
+      if (res & sqbb(sq + 2) && attacked_by_enemy & sc) res &= ~sqbb(sq + 2);
+      if (res & sqbb(sq - 2) && attacked_by_enemy & lc) res &= ~sqbb(sq - 2);
    }
    else if (pt == Pawn) {
       res = gen_pawn_attacks(sq, myc, occ, mypieces);
