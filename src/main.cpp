@@ -16,10 +16,9 @@ int main(int argc, char **argv) {
    // first arg is depth, and second is fen string
    if (argc >= 2) {
       string FEN = "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8";
-      if (argc == 3) FEN = argv[2];
+      if (argc == 3) FEN = argv[1];
       Board b{ FEN };
-      int depth = argv[1][0] - '0';
-      std::cout << depth << '\n';
+      int depth = argv[2][0] - '0';
       timed_perft(b, depth);
       return 0;
    }

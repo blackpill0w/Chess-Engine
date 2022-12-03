@@ -92,7 +92,13 @@ inline string sqstr(const Square sq) {
    str[1] += sq/8;
    return str;
 }
-#include <cstdio>
+
+inline string str_repeat(const string &str, int n) {
+   string res = "";
+   for (int i = 0; i < n; ++i) res += str;
+   return res;
+}
+
 [[maybe_unused]]
 inline Bitboard perft(Board &b, int depth, int original_depth = 0) {
    if (depth == 0) return 1ull;
@@ -120,9 +126,9 @@ inline Bitboard perft(Board &b, int depth, int original_depth = 0) {
 
    int x = 0;
    for (size_t i = 0; i < moves.size(); ++i) {
-      string prev = sqstr(moves[i].from) + sqstr(moves[i].to);
+      string m = sqstr(moves[i].from) + sqstr(moves[i].to);
       if (b.get_piece_type(moves[i].from) == Pawn && (moves[i].to <= H1 || moves[i].to >= A8)) {
-         prev += pieces_char[moves[i].pt];
+         m += pieces_char[moves[i].pt];
       }
       if (b.make_move(moves[i].from, moves[i].to, moves[i].pt) == Chess::InavlidMove) {
          cout << "invalid\n";
@@ -132,10 +138,7 @@ inline Bitboard perft(Board &b, int depth, int original_depth = 0) {
       x = j;
       pos_num += j;
       b.unmake_move();
-      if (!original_depth) printf("%s %d\n", prev.c_str(), x);
-      else if (depth == original_depth - 1) printf("-- %s %d\n", prev.c_str(), x);
-      //else if (depth == original_depth - 2) printf("-- -- %s %d\n", prev.c_str(), x);
-      //else if (depth == original_depth - 3) printf("-- -- -- %s %d\n", prev.c_str(), x);
+      if (depth > 1) cout << str_repeat("-- ", depth) << ' ' << m << ' ' << x << '\n';
    }
    return pos_num;
 }

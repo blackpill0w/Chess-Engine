@@ -253,6 +253,9 @@ void Board::gen_board_legal_moves() {
              && (all_pieces() & (lc | not_to_occupy_in_lc) || attacked_by_enemy & lc)) {
             pm.possible_moves &= ~sqbb(sq-2);
          }
+         if (sqbb(king_sq) & attacked_by_enemy) {
+            pm.possible_moves &= ~sqbb(sq-2) & ~sqbb(sq+2);
+         }
       }
       movelist.emplace_back(pm);
    }
