@@ -138,7 +138,7 @@ inline Bitboard perft(Board &b, int depth, int original_depth = 0) {
       x = j;
       pos_num += j;
       b.unmake_move();
-      if (depth > 1) cout << str_repeat("-- ", depth) << ' ' << m << ' ' << x << '\n';
+      //if (depth > 1) cout << str_repeat("-- ", depth) << ' ' << m << ' ' << x << '\n';
    }
    return pos_num;
 }

@@ -36,22 +36,24 @@ struct Board {
 public:
    // A list of bitboards, one for each color-piece combination
    array<Bitboard, 12> piecesBB;
-   // Save en passant target square if it exists
-   Square enpassant_square;
-   // The color of the pieces to play
-   PieceColor color_to_play;
    // A list of previously played moves
    vector<MoveData> move_history;
    // The list of moves each piece (with color to play) can make
    vector<PieceMoves> movelist;
+   // Save en passant target square if it exists
+   Square enpassant_square = NoSquare;
+   // The color of the pieces to play
+   PieceColor color_to_play = White;
    // Castling rights
-   CastlingRights cr;
+   CastlingRights cr = 0;
    // A bitboard containing the squares attacked by the enemy
-   Bitboard attacked_by_enemy;
-   // A bitboard containing the pieces putting the king (with color to play) in check
-   Bitboard checkers;
-   // This variable is used to restrict movement of pieces when in check, etc
+   Bitboard attacked_by_enemy = 0;
+   // A bitboard containing the pieces putting the king in check
+   Bitboard checkers = 0;
+   // Used to restrict movement of pieces when in check
    Bitboard possible_moves = ~0;
+   // 50 move rule counter
+   int fifty = 0;
 public:
    /*!
      Default constructor.
@@ -108,6 +110,11 @@ public:
      Check if a square is occupied.
    */
    bool is_square_occupied(const Square sq) const;
+
+   /*
+     Check if king to play is in check.
+   */
+   bool in_check() const;
 
    //! Remove a piece from the board.
    void remove_piece_at(const Square sq);

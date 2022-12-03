@@ -6,7 +6,6 @@
 
 #include "./utils.hpp"
 #include "./bitboard.hpp"
-#include "./bitopt.hpp"
 #include "./move_gen.hpp"
 #include "./debug.hpp"
 
@@ -17,9 +16,7 @@ namespace Chess
 {
 
 Board::Board (const string &FEN)
-   : piecesBB{}, enpassant_square{NoSquare}, color_to_play{White},
-     move_history{}, movelist{}, cr{AnyCastling}, attacked_by_enemy{},
-     checkers{}
+   : piecesBB{}, move_history{}, movelist{}
 {
    move_history.reserve(64);
    movelist.reserve(64);
@@ -41,22 +38,14 @@ Bitboard Board::all_pieces() const {
 Bitboard Board::get_pieces(const PieceColor c, const PieceType pt) const {
    const int i = c == White ? 0 : 6;
    switch (pt) {
-      case King:
-         return piecesBB[WK + i];
-      case Queen:
-         return piecesBB[WQ + i];
-      case Rook:
-         return piecesBB[WR + i];
-      case Bishop:
-         return piecesBB[WB + i];
-      case Knight:
-         return piecesBB[WN + i];
-      case Pawn:
-         return piecesBB[WP + i];
-      case NoType:
-         return c == White ? white_pieces() : black_pieces();
-      default:
-         return 0;
+      case King:   return piecesBB[WK + i];
+      case Queen:  return piecesBB[WQ + i];
+      case Rook:   return piecesBB[WR + i];
+      case Bishop: return piecesBB[WB + i];
+      case Knight: return piecesBB[WN + i];
+      case Pawn:   return piecesBB[WP + i];
+      case NoType: return c == White ? white_pieces() : black_pieces();
+      default:     return 0;
    }
 }
 
@@ -77,11 +66,7 @@ PieceType Board::get_piece_type(const Square sq) const {
 }
 
 size_t Board::get_pieceBB_index(const Square sq) const {
-   for (size_t i = 0; i < piecesBB.size(); ++i) {
-      if (sqbb(sq) & piecesBB[i]) {
-         return i;
-      }
-   }
+   for (size_t i = 0; i < piecesBB.size(); ++i) if (sqbb(sq) & piecesBB[i]) return i;
    return invalid_index;
 }
 
@@ -97,8 +82,12 @@ bool Board::is_square_occupied(const Square sq) const {
    return (sqbb(sq) & all_pieces()) != 0;
 }
 
+bool Board::in_check() const {
+   return get_pieces(color_to_play, King) & attacked_by_enemy;
+}
+
 void Board::remove_piece_at(const Square sq) {
-   unsetbit(piecesBB[get_pieceBB_index(sq)], sq);
+   piecesBB[get_pieceBB_index(sq)] &= ~sqbb(sq);
 }
 
 MoveData Board::gen_move_data(const Square from, const Square to, const PieceType promote_to) const {
@@ -253,7 +242,7 @@ void Board::gen_board_legal_moves() {
              && (all_pieces() & (lc | not_to_occupy_in_lc) || attacked_by_enemy & lc)) {
             pm.possible_moves &= ~sqbb(sq-2);
          }
-         if (sqbb(king_sq) & attacked_by_enemy) {
+         if (in_check()) {
             pm.possible_moves &= ~sqbb(sq-2) & ~sqbb(sq+2);
          }
       }
@@ -270,8 +259,8 @@ void Board::change_piece_pos(Square from, Square to) {
       std::cerr << from << " -> " << to << '\n';
       exit(1);
    }
-   unsetbit(piecesBB[i], from);
-   setbit(piecesBB[i], to);
+   piecesBB[i] &= ~sqbb(from);
+   piecesBB[i] |= sqbb(to);
 }
 
 bool Board::is_valid_move(const Square from, const Square to) const {
@@ -343,7 +332,14 @@ BoardState Board::make_move(const Square from, const Square to, const PieceType 
    color_to_play = ~myc;
    gen_board_legal_moves();
 
-   return NoErr;
+   BoardState state = in_check() ? CheckMate : Draw;
+   for (auto& pm: movelist) {
+      if (pm.possible_moves) {
+         state = NoErr;
+         break;
+      }
+   }
+   return state;
 }
 
 BoardState Board::unmake_move() {
@@ -359,8 +355,8 @@ BoardState Board::unmake_move() {
    const PieceType taken_pt = md_get_taken_piece_type(md);
 
    if (md_get_move_type(md) == Promotion) {
-      setbit(piecesBB[Pawn + i], from);
-      unsetbit(piecesBB[get_pieceBB_index(md_get_promotion_type(md), color_to_play)], to);
+      piecesBB[Pawn + i] |= sqbb(from);
+      piecesBB[get_pieceBB_index(md_get_promotion_type(md), color_to_play)] &= ~sqbb(to);
    }
    else if (md_get_move_type(md) == En_passant) {
       change_piece_pos(to, from);
