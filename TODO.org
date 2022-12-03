@@ -1,14 +1,13 @@
-* TODO there is bugs in move genration
-
 * Move generation
-** DONE take piece when en passant is played
-** DONE castling
-** DONE checks
-** DONE pins
-** DONE en passant discovered checks
+** DONE Take piece when en passant is played
+** DONE Castling
+** DONE Checks
+** DONE Pins
+** DONE En passant discovered checks
 ** DONE Promotions
-** TODO make sure move generation works
-** TODO Checkmake & Draw & 50 move rule
+** DONE Checkmake & Draw
+** DONE Make sure move generation works
+** TODO 50 move rule
 
 * Search & Eval
 ** ??
