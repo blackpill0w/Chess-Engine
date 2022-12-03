@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include "./board.hpp"
-#include "./bitopt.hpp"
 #include "./bitboard.hpp"
 
 using std::cout;
@@ -50,7 +49,7 @@ inline std::ostream& operator<<(std::ostream& os, Square sq) {
 inline void print_bb(Bitboard bb) {
    for (int i=7; i >= 0; --i) {
       for (unsigned j=0; j < 8; ++j) {
-         cout << (isbitset(bb, i*8 + j) ? '1' : '.');
+         cout << ((bb & sqbb(i*8 + j)) ? '1' : '.');
       }
       cout << '\n';
    }
