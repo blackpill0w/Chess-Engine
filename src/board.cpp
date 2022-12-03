@@ -144,10 +144,6 @@ Bitboard Board::gen_piece_moves(const Square sq, const Bitboard occ, const Bitbo
    }
    else if (pt == King) {
       res = gen_king_moves(sq, occ, mypieces, myc, cr);
-      const Bitboard sc = get_piece_color(sq) == White ? WKSCastlingSquaresBB : BKSCastlingSquaresBB;
-      const Bitboard lc = sc == WKSCastlingSquaresBB ? WQSCastlingSquaresBB : BQSCastlingSquaresBB;
-      if (res & sqbb(sq + 2) && attacked_by_enemy & sc) res &= ~sqbb(sq + 2);
-      if (res & sqbb(sq - 2) && attacked_by_enemy & lc) res &= ~sqbb(sq - 2);
    }
    else if (pt == Pawn) {
       res = gen_pawn_attacks(sq, myc, occ, mypieces);
@@ -230,25 +226,35 @@ void Board::gen_board_legal_moves() {
    }
 
    for (Square sq = A1; sq <= H8; ++sq) {
-      if (get_piece_color(sq) == color_to_play) {
-         const Bitboard ep = get_piece_type(sq) == Pawn ? sqbb(enpassant_square) : 0;
-         PieceMoves pm{ sq, gen_piece_moves(sq, all_pieces() | ep, get_pieces(color_to_play, NoType)) };
-         if (get_piece_type(sq) == Pawn
-             && (((sqbb(enpassant_square) >> 8) & attackers) || ((sqbb(enpassant_square) << 8) & attackers))
-            ) {
-            pm.possible_moves &= possible_moves | sqbb(enpassant_square);
-         }
-         else if (sq != king_sq) {
-            pm.possible_moves &= possible_moves;
-         }
-         else {
-            pm.possible_moves &= ~attacked_by_enemy;
-            if ((cr & (color_to_play == White ? WhiteCastling : BlackCastling)) && attackers) {
-               pm.possible_moves &= ~(sqbb(sq + 2) | sqbb(sq - 2));
-            }
-         }
-         movelist.emplace_back(pm);
+      if (get_piece_color(sq) != color_to_play) {
+         continue;
       }
+      const Bitboard ep = get_piece_type(sq) == Pawn ? sqbb(enpassant_square) : 0;
+      PieceMoves pm{ sq, gen_piece_moves(sq, all_pieces() | ep, get_pieces(color_to_play, NoType)) };
+      if (get_piece_type(sq) == Pawn
+          && (((sqbb(enpassant_square) >> 8) & attackers) || ((sqbb(enpassant_square) << 8) & attackers))
+         ) {
+         pm.possible_moves &= possible_moves | sqbb(enpassant_square);
+      }
+      else if (sq != king_sq) {
+         pm.possible_moves &= possible_moves;
+      }
+      else {
+         pm.possible_moves &= ~attacked_by_enemy;
+         const Bitboard sc = get_piece_color(sq) == White ? WKSCastlingSquaresBB : BKSCastlingSquaresBB;
+         const Bitboard lc = sc == WKSCastlingSquaresBB ? WQSCastlingSquaresBB : BQSCastlingSquaresBB;
+         // Long castle is illegal if the B file is occupied, but legal if it's attacked
+         const Bitboard not_to_occupy_in_lc = sqbb(color_to_play == White ? B1 : B8);
+         if ((cr & (color_to_play == White ? White_OO : Black_OO))
+             && (all_pieces() & sc || attacked_by_enemy & sc)) {
+            pm.possible_moves &= ~sqbb(sq+2);
+         }
+         if ((cr & (color_to_play == White ? White_OOO : Black_OOO))
+             && (all_pieces() & (lc | not_to_occupy_in_lc) || attacked_by_enemy & lc)) {
+            pm.possible_moves &= ~sqbb(sq-2);
+         }
+      }
+      movelist.emplace_back(pm);
    }
    limit_moves_of_pinned_pieces();
 }
