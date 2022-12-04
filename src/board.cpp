@@ -7,7 +7,6 @@
 #include "./utils.hpp"
 #include "./bitboard.hpp"
 #include "./move_gen.hpp"
-#include "./debug.hpp"
 
 using std::string;
 using std::find_if;
@@ -21,6 +20,10 @@ Board::Board (const string &FEN)
    move_history.reserve(64);
    movelist.reserve(64);
    load_fen(FEN);
+}
+
+BoardState Board::get_state() const {
+   return state;
 }
 
 Bitboard Board::white_pieces() const {
@@ -105,7 +108,7 @@ MoveData Board::gen_move_data(const Square from, const Square to, const PieceTyp
    else if (pt == King && abs((int) (to - from)) == 2) {
       mt = Castling;
    }
-   return new_md(from, to, promote_to, mt, taken_pt, cr, enpassant_square);
+   return new_md(from, to, promote_to, mt, taken_pt, cr, enpassant_square, fifty_move_counter);
 }
 
 Bitboard Board::attackers_of(const Square sq) const {
@@ -172,6 +175,8 @@ void Board::limit_moves_of_pinned_pieces() {
 
 void Board::gen_board_legal_moves() {
    movelist.clear();
+   if (state == Playing && fifty_move_counter == 100) state = Draw;
+   if (state == Draw || state == Checkmate) return;
    attacked_by_enemy = 0;
    checkers = 0;
    possible_moves = ~0ull;
@@ -249,16 +254,21 @@ void Board::gen_board_legal_moves() {
       movelist.emplace_back(pm);
    }
    limit_moves_of_pinned_pieces();
+
+   // Checkmate & Stalemate
+   state = in_check() ? Checkmate : Draw;
+   for (auto& pm: movelist) {
+      if (pm.possible_moves) {
+         state = Playing;
+         break;
+      }
+   }
+   if (state == Playing && fifty_move_counter == 100) state = Draw;
 }
 
 void Board::change_piece_pos(Square from, Square to) {
+   assert(is_ok(from) && is_ok(to));
    const int i = get_pieceBB_index(from);
-   if (i == invalid_index) {
-      std::cerr << "Invalid read\n";
-      print_board(*this);
-      std::cerr << from << " -> " << to << '\n';
-      exit(1);
-   }
    piecesBB[i] &= ~sqbb(from);
    piecesBB[i] |= sqbb(to);
 }
@@ -272,47 +282,49 @@ bool Board::is_valid_move(const Square from, const Square to) const {
    return x != movelist.end();
 }
 
-static void handle_castling_rights_changes(Board &b, PieceColor myc, Square from, Square to) {
-   if (b.get_piece_type(from) == King) {
-      b.cr &= ~(myc == White ? WhiteCastling : BlackCastling);
+void Board::handle_castling_rights_changes(const Square from, const Square to) {
+   if (get_piece_type(from) == King) {
+      cr &= ~(color_to_play == White ? WhiteCastling : BlackCastling);
    }
-   else if (b.get_piece_type(from) == Rook) {
-      if (from == (myc == White ? H1 : H8)) { // king side rook
-         b.cr &= ~(myc == White ? White_OO : Black_OO);
+   else if (get_piece_type(from) == Rook) { // rook moved
+      if (from == (color_to_play == White ? H1 : H8)) { // king side rook
+         cr &= ~(color_to_play == White ? White_OO : Black_OO);
       }
-      else if (from == (myc == White ? A1 : A8)) { // queen side rook
-         b.cr &= ~(myc == White ? White_OOO : Black_OOO);
+      else if (from == (color_to_play == White ? A1 : A8)) { // queen side rook
+         cr &= ~(color_to_play == White ? White_OOO : Black_OOO);
       }
    }
-   if (b.get_piece_type(to) == Rook) { // rook was taken
-      if (to == (~myc == White ? H1 : H8)) { // king side rook
-         b.cr &= ~(~myc == White ? White_OO : Black_OO);
+   if (get_piece_type(to) == Rook) { // rook was taken
+      if (to == (~color_to_play == White ? H1 : H8)) { // king side rook
+         cr &= ~(~color_to_play == White ? White_OO : Black_OO);
       }
-      else if (to == (~myc == White ? A1 : A8)) { // queen side rook
-         b.cr &= ~(~myc == White ? White_OOO : Black_OOO);
+      else if (to == (~color_to_play == White ? A1 : A8)) { // queen side rook
+         cr &= ~(~color_to_play == White ? White_OOO : Black_OOO);
       }
    }
 }
 
-BoardState Board::make_move(const Square from, const Square to, const PieceType promote_to) {
-   if (!is_valid_move(from, to)) {
-      return InavlidMove;
-   }
+BoardErr Board::make_move(const Square from, const Square to, const PieceType promote_to) {
+   if (!is_valid_move(from, to)) return InvalidMove;
+   if (state == Draw || state == Checkmate) return GameOver;
 
-   PieceColor myc   = get_piece_color(from);
    MoveData md      = gen_move_data(from, to, promote_to);
    enpassant_square = NoSquare;
-   handle_castling_rights_changes(*this, myc, from, to);
+   handle_castling_rights_changes(from, to);
+
+   // Fifty move rule
+   if (get_piece_type(from) == Pawn || get_piece_color(to) == ~color_to_play) fifty_move_counter = 0;
+   else fifty_move_counter++;
 
    // check if we should take a piece
-   if (get_piece_color(to) == ~myc) {
+   if (get_piece_color(to) == ~color_to_play) {
       remove_piece_at(to);
    }
    if (md_get_move_type(md) == En_passant) { // take if en passant
-      remove_piece_at(to - 8*pawn_direction(myc));
+      remove_piece_at(to - 8*pawn_direction(color_to_play));
    }
    else if (get_piece_type(from) == Pawn && abs((int) (from - to)) == 8*2) {
-      enpassant_square = from + 8*pawn_direction(myc);
+      enpassant_square = from + 8*pawn_direction(color_to_play);
    }
    else if (md_get_move_type(md) == Promotion) {
       assert(promote_to == Queen || promote_to == Rook || promote_to == Bishop || promote_to == Knight);
@@ -329,21 +341,14 @@ BoardState Board::make_move(const Square from, const Square to, const PieceType 
    if (md_get_move_type(md) != Promotion) change_piece_pos(from, to);
    move_history.emplace_back(md);
 
-   color_to_play = ~myc;
+   color_to_play = ~color_to_play;
    gen_board_legal_moves();
 
-   BoardState state = in_check() ? CheckMate : Draw;
-   for (auto& pm: movelist) {
-      if (pm.possible_moves) {
-         state = NoErr;
-         break;
-      }
-   }
-   return state;
+   return NoErr;
 }
 
-BoardState Board::unmake_move() {
-   if (move_history.size() == 0) return NoMoveToUnmake;
+BoardErr Board::unmake_move() {
+   if (move_history.empty()) return NoMoveToUnmake;
 
    color_to_play = ~color_to_play;
    const int i = color_to_play == White ? 0 : 6;
@@ -381,7 +386,11 @@ BoardState Board::unmake_move() {
    }
    cr = md_get_castling_rights(md);
    enpassant_square = md_get_ep_square(md);
+   fifty_move_counter = md_get_fmrc(md);
+   std::cout << fifty_move_counter << '\n';
+   state = Playing;
    gen_board_legal_moves();
+
    return NoErr;
 }
 

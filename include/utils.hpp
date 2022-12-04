@@ -2,10 +2,9 @@
 
 #include <cstdint>
 #include <array>
-#include <string>
 
-using std::string;
-using std::array;
+namespace Chess
+{
 
 #define ENABLE_BASE_OPERATORS_ON(T)                                \
 constexpr T operator+(T d1, int d2) { return T(int(d1) + d2); }    \
@@ -22,9 +21,8 @@ inline T& operator--(T& d) { return d = T(int(d) - 1); }
    ENABLE_BASE_OPERATORS_ON(T)                  \
    ENABLE_INCR_OPERATORS_ON(T)
 
-
-namespace Chess
-{
+using std::size_t;
+using std::array;
 
 inline size_t constexpr invalid_index = 99999999;
 
@@ -42,16 +40,17 @@ inline constexpr int pawn_direction(PieceColor c) {
 enum PieceType { Knight, Bishop, Rook, Queen, King, Pawn, PieceTypeNum = 6, NoType };
 
 enum Square {
-   A1, B1, C1, D1, E1, F1, G1, H1,
-   A2, B2, C2, D2, E2, F2, G2, H2,
-   A3, B3, C3, D3, E3, F3, G3, H3,
-   A4, B4, C4, D4, E4, F4, G4, H4,
-   A5, B5, C5, D5, E5, F5, G5, H5,
-   A6, B6, C6, D6, E6, F6, G6, H6,
-   A7, B7, C7, D7, E7, F7, G7, H7,
-   A8, B8, C8, D8, E8, F8, G8, H8,
-   SqNum = 64, NoSquare
+  A1, B1, C1, D1, E1, F1, G1, H1,
+  A2, B2, C2, D2, E2, F2, G2, H2,
+  A3, B3, C3, D3, E3, F3, G3, H3,
+  A4, B4, C4, D4, E4, F4, G4, H4,
+  A5, B5, C5, D5, E5, F5, G5, H5,
+  A6, B6, C6, D6, E6, F6, G6, H6,
+  A7, B7, C7, D7, E7, F7, G7, H7,
+  A8, B8, C8, D8, E8, F8, G8, H8,
+  SqNum = 64, NoSquare
 };
+inline constexpr bool is_ok(const Square sq) { return sq >= A1 && sq <= H8; };
 inline constexpr Bitboard sqbb(Square sq) { return sq < A1 || sq > H8 ? 0 : 1ull << sq; };
 ENABLE_OPERATORS_ON(Square);
 
@@ -123,9 +122,9 @@ inline constexpr Bitboard BQSCastlingSquaresBB = (1ull << C8) | (1ull << D8);
   bit 16-18: type of piece taken if there is any
   bit 19-22: castling rights before making the move
   bit 23-29: en passant target (6 bits because +1 for NoSquare)
-  todo: 50 move rule
+  bit 30-36: value of 50 move rule counter
 */
-using MoveData = uint32_t;
+using MoveData = uint64_t;
 enum MoveType {
    Normal,
    Promotion,
@@ -140,10 +139,11 @@ inline constexpr Bitboard md_move_type        = 3 << 14;
 inline constexpr Bitboard md_taken_piece_type = 7 << 16;
 inline constexpr Bitboard md_castling_rights  = 15 << 19;
 inline constexpr Bitboard md_ep_square        = 127 << 23;
+inline constexpr Bitboard md_fmrc             = 127ul << 30;
 
 inline constexpr MoveData new_md(Square from, Square to, PieceType pt, MoveType mt, PieceType taken,
-                                 CastlingRights cr, Square ep_square) {
-   return (ep_square << 23) | (cr << 19) | (taken << 16) | (mt << 14) | (pt << 12) | (to << 6) | from;
+                                 CastlingRights cr, Square ep_square, size_t fmrc) {
+   return ((fmrc & 127) << 30) | (ep_square << 23) | (cr << 19) | (taken << 16) | (mt << 14) | (pt << 12) | (to << 6) | from;
 }
 inline constexpr Square md_get_square_from(MoveData m) {
    return Square(m & md_from);
@@ -167,4 +167,12 @@ inline constexpr Square md_get_ep_square(MoveData m) {
    return Square((m & md_ep_square) >> 23);
 }
 
+inline constexpr size_t md_get_fmrc(MoveData m) {
+   return (m & md_fmrc) >> 30;
+}
+
 } // namespace Chess
+
+#undef ENABLE_OPERATORS_ON
+#undef ENABLE_BASE_OPERATORS_ON
+#undef ENABLE_INCR_OPERATORS_ON

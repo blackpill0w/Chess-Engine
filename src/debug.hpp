@@ -129,7 +129,7 @@ inline Bitboard perft(Board &b, int depth, int original_depth = 0) {
       if (b.get_piece_type(moves[i].from) == Pawn && (moves[i].to <= H1 || moves[i].to >= A8)) {
          m += pieces_char[moves[i].pt];
       }
-      if (b.make_move(moves[i].from, moves[i].to, moves[i].pt) == Chess::InavlidMove) {
+      if (b.make_move(moves[i].from, moves[i].to, moves[i].pt) == Chess::InvalidMove) {
          cout << "invalid\n";
          exit(1);
       };

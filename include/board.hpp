@@ -6,12 +6,12 @@
 
 #include "./utils.hpp"
 
+namespace Chess {
+
 using std::string;
 using std::array;
 using std::vector;
 
-namespace Chess
-{
 // useful indices
 inline constexpr size_t wp_start = 0;
 inline constexpr size_t wp_end   = 5;
@@ -30,10 +30,12 @@ struct PieceMoves {
 
 inline const string standard_chess = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
-enum BoardState { NoErr, InavlidMove, NoMoveToUnmake, Draw, CheckMate };
+enum BoardState { None, Playing, Draw, Checkmate };
+enum BoardErr { NoErr, InvalidMove, NoMoveToUnmake, GameOver };
 
 struct Board {
 public:
+   BoardState state = None;
    // A list of bitboards, one for each color-piece combination
    array<Bitboard, 12> piecesBB;
    // A list of previously played moves
@@ -53,7 +55,7 @@ public:
    // Used to restrict movement of pieces when in check
    Bitboard possible_moves = ~0;
    // 50 move rule counter
-   int fifty = 0;
+   size_t fifty_move_counter = 0;
 public:
    /*!
      Default constructor.
@@ -66,7 +68,12 @@ public:
    /*!
      Load a FEN string into a board and generate legal moves.
    */
-   void load_fen(string FEN);
+   void load_fen(const string& FEN);
+
+   /*!
+     Return the state of the board.
+   */
+   BoardState get_state() const;
 
    /*!
      Returns a Bitboard containing all white pieces.
@@ -157,12 +164,17 @@ public:
    bool is_valid_move(const Square from, const Square to) const;
 
    /*!
+     Handle castling rights changes.
+   */
+   void handle_castling_rights_changes(const Square from, const Square to);
+
+   /*!
       Make a move.
       @return `NoError` on success, `InvalidMove` if move is invalid.
    */
-   BoardState make_move(const Square from, const Square to, const PieceType promote_to = Queen);
+   BoardErr make_move(const Square from, const Square to, const PieceType promote_to = Queen);
 
-   BoardState unmake_move();
+   BoardErr unmake_move();
 
 };
 

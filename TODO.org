@@ -7,7 +7,8 @@
 ** DONE Promotions
 ** DONE Checkmake & Draw
 ** DONE Make sure move generation works
-** TODO 50 move rule
+** DONE 50 move rule
+** TODO Draw by repitition
 
 * Search & Eval
 ** ??
