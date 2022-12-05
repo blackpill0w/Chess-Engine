@@ -1,5 +1,5 @@
-#include <Functions.hpp>
 #include <array>
+#include <raylib.h>
 #include <vector>
 #include <string>
 #include <raylib-cpp.hpp>
@@ -25,6 +25,7 @@ Vector2 square_to_coordinates(Square sq);
 Square coordinates_to_square(Vector2 v);
 void load_chess_textures(array<Texture2D, 12> &txtrs, const array<string, 12> &imgs);
 void load_pieces_from_board(Board &b, vector<ChessPiece> &pieces, array<Texture2D, 12> &txtrs);
+void draw_text(const string& text);
 Chess::PieceType get_promotion_type(raylib::Window &win);
 
 constexpr int pieceSize    = 60;
@@ -62,9 +63,9 @@ int main(void) {
    //Board b{ Chess::standard_chess };
    //Board b { "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1" };
    //Board b{ "5k2/8/8/3qP3/b7/1N3Q2/8/3K1B2 w - - 0 1" };
-   //Board b{ "8/P1p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1" };
+   Board b{ "8/P1p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1" };
    //Board b { "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 10" };
-   Board b{ "8/8/5p2/5k2/8/4KP2/8/8 w - - 99 57" };
+   //Board b{ "8/8/5p2/5k2/8/4KP2/8/8 w - - 99 57" };
 
    Image board_img = LoadImage("../assets/img/chess-board.png");
    ImageResize(&board_img, 8*pieceSize, 8*pieceSize);
@@ -149,6 +150,9 @@ int main(void) {
             if (i != selected_piece) DrawTextureV(*pieces.at(i).txtr, pieces.at(i).pos, WHITE);
          }
          if (selected_piece != -1) DrawTextureV(*pieces.at(selected_piece).txtr, pieces.at(selected_piece).pos, WHITE);
+
+         if (b.get_state() == Chess::Checkmate) draw_text("Checkmate");
+         else if (b.get_state() == Chess::Draw) draw_text("Draw");
       }
       EndDrawing();
    }
@@ -209,20 +213,37 @@ void load_pieces_from_board(Board &b, vector<ChessPiece> &pieces, array<Texture2
    }
 }
 
+void draw_text(const string &text) {
+   constexpr int boxW = 300;
+   constexpr int boxH = 200;
+   constexpr int boxX = winW/2 - boxW/2;
+   constexpr int boxY = winH/2 - boxH/2;
+
+   DrawRectangle(boxX, boxY, boxW, boxH, raylib::Color(0, 0, 0, 150));
+   raylib::DrawText(text,  boxX + 60, boxY + 50, 28, raylib::Color::White());
+}
+
 Chess::PieceType get_promotion_type(raylib::Window& win) {
    Chess::PieceType pt = Chess::Queen;
    constexpr int boxW = 250;
-   constexpr int boxH = 250;
+   constexpr int boxH = 200;
+   constexpr int boxX = winW/2 - boxW/2;
+   constexpr int boxY = winH/2 - boxH/2;
+
+   BeginDrawing();
+      DrawRectangle(boxX, boxY, boxW, boxH, raylib::Color(0, 0, 0, 150));
+      raylib::DrawText("<Q> Queen",  boxX + 60, boxY + 20,  24, raylib::Color::White());
+      raylib::DrawText("<R> Rook",   boxX + 60, boxY + 50,  24, raylib::Color::White());
+      raylib::DrawText("<B> Bishop", boxX + 60, boxY + 80,  24, raylib::Color::White());
+      raylib::DrawText("<N> Knight", boxX + 60, boxY + 110, 24, raylib::Color::White());
+   EndDrawing();
 
    while (!win.ShouldClose()) {
       if (IsKeyPressed(KEY_Q)) break;
       else if (IsKeyPressed(KEY_B)) { pt = Bishop; break; }
       else if (IsKeyPressed(KEY_R)) { pt = Rook; break; }
       else if (IsKeyPressed(KEY_N)) { pt = Knight; break; }
-
       BeginDrawing();
-      DrawRectangle(winW/2 - boxW/2, winH/2 - boxH/2, boxW, boxH, raylib::Color(0, 0, 0, 120));
-      raylib::DrawText("<Q> Queen", boxW + 30, boxH + 20, 16, raylib::Color::White());
       EndDrawing();
    }
    return pt;

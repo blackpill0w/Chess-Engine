@@ -1,8 +1,8 @@
 #include "./board.hpp"
 
-#include <string>
 #include <iostream>
 #include <algorithm>
+#include <string>
 
 #include "./utils.hpp"
 #include "./bitboard.hpp"
