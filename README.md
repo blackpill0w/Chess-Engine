@@ -5,4 +5,4 @@ The engine works (should work) with GCC, Clang or ICC (tested only with GCC thou
 <br>Run this in a terminal (from the root directory of the project):
 <br>`meson setup --buildtype release build && cd build && meson compile`
 <br><br> This produces two binary files, `chess` and `chess-gui`.
-<br> `chess` is only used for debugging purposes while `chess-gui` can be used to play chess with a graphical display.
+<br> `chess` is used only for debugging purposes while `chess-gui` can be used to play chess with a graphical display.

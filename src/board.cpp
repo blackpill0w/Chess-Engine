@@ -387,7 +387,6 @@ BoardErr Board::unmake_move() {
    cr = md_get_castling_rights(md);
    enpassant_square = md_get_ep_square(md);
    fifty_move_counter = md_get_fmrc(md);
-   std::cout << fifty_move_counter << '\n';
    state = Playing;
    gen_board_legal_moves();
 
