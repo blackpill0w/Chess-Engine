@@ -9,6 +9,7 @@ libengine = library('chess-engine',
                     'src/move_gen.cpp',
                     'src/pawn_move_gen.cpp',
                     'src/board.cpp',
+                    'src/zobrist.cpp',
                     include_directories : incdir,
                    )
 

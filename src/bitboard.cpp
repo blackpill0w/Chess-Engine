@@ -3,7 +3,7 @@
 
 namespace Chess {
 
-static inline array<array<Bitboard, 64>, 64> _between_bb_all() {
+static array<array<Bitboard, 64>, 64> _between_bb_all() {
    array<array<Bitboard, 64>, 64> arr{};
    for (Square sq1 = A1; sq1 <= H8; ++sq1) {
       for (auto pt: { Rook, Bishop }) {

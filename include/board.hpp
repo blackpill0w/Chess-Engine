@@ -12,12 +12,6 @@ using std::string;
 using std::array;
 using std::vector;
 
-// useful indices
-inline constexpr size_t wp_start = 0;
-inline constexpr size_t wp_end   = 5;
-inline constexpr size_t bp_start = 6;
-inline constexpr size_t bp_end   = 11;
-
 // enum to access pieces' positions
 enum { WN, WB, WR, WQ, WK, WP, BN, BB, BR, BQ, BK, BP };
 
@@ -56,6 +50,10 @@ public:
    Bitboard possible_moves = ~0;
    // 50 move rule counter
    size_t fifty_move_counter = 0;
+   // Zobrist
+   vector<Key> zobrist;
+   // To optimize checking for draw by repetition
+   size_t last_irreversible_move = 0;
 public:
    /*!
      Default constructor.
@@ -143,6 +141,11 @@ public:
    */
    void gen_board_legal_moves();
 
+   /*
+      Check if a move is valid.
+   */
+   bool is_valid_move(const Square from, const Square to) const;
+
    /*!
       TODO
    */
@@ -154,14 +157,10 @@ public:
    Bitboard attackers_of(const Square sq) const;
 
    /*
-      TODO
+      Change position of a piece, no checks are made and pieces
+      from enemy are not taken.
    */
    void change_piece_pos(Square from, Square to);
-
-   /*
-      TODO
-   */
-   bool is_valid_move(const Square from, const Square to) const;
 
    /*!
      Handle castling rights changes.
@@ -170,12 +169,26 @@ public:
 
    /*!
       Make a move.
-      @return `NoError` on success, `InvalidMove` if move is invalid.
+      @return `InvalidMove` if move is invalid, `GameOver` if the game ends,
+      otherwise `NoErr`.
    */
    BoardErr make_move(const Square from, const Square to, const PieceType promote_to = Queen);
 
+   /*
+      Unmake a move.
+      @return `NoMoveToUnmake` if there is no move to unmake, `NoErr` otherwise.
+   */
    BoardErr unmake_move();
 
+   /*
+      Calculate Zobrist key of the current position.
+   */
+   Key calc_zobrist_key();
+
+   /*
+      Check if draw by repetition.
+   */
+   bool is_draw_by_repetition() const;
 };
 
 } // namesapce Chess

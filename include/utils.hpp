@@ -26,6 +26,7 @@ using std::array;
 
 inline size_t constexpr invalid_index = 99999999;
 
+using Key      = uint64_t; // For Zobrist
 using Bitboard = uint64_t;
 using PiecePos = uint64_t;
 
@@ -59,7 +60,7 @@ enum File {
 };
 inline constexpr Bitboard _fileA = 0x0101010101010101;
 inline constexpr File get_file(Square sq) { return File(sq % 8); }
-inline constexpr Bitboard file_bb(File chess_file) { return _fileA << chess_file; }
+inline constexpr Bitboard file_bb(File file) { return _fileA << file; }
 inline constexpr Bitboard file_bb(Square sq) { return file_bb(get_file(sq)); }
 inline constexpr bool squares_on_same_file(Square sq1, Square sq2) { return get_file(sq1) == get_file(sq2); }
 
@@ -67,7 +68,7 @@ enum Rank { rank1, rank2, rank3, rank4, rank5, rank6, rank7, rank8 };
 
 inline constexpr Bitboard _rank1 = 255;
 inline constexpr Rank get_rank(Square sq) { return Rank(sq / 8); }
-inline constexpr Bitboard rank_bb(Rank chess_rank) { return _rank1 << (8*chess_rank); }
+inline constexpr Bitboard rank_bb(Rank rank) { return _rank1 << (8*rank); }
 inline constexpr Bitboard rank_bb(Square sq) { return rank_bb(get_rank(sq)); }
 inline constexpr bool squares_on_same_rank(Square sq1, Square sq2) { return get_rank(sq1) == get_rank(sq2); }
 

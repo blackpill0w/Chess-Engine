@@ -12,27 +12,13 @@ inline std::ostream& operator<<(std::ostream& os, PieceColor c) {
    return os << (c == White ? "White" : c == Black ? "Black" : "NoColor");
 }
 
-inline std::ostream& operator<<(std::ostream& os, PieceType pt) {
-   return os << (
-      pt == King ? "King"
-      : pt == Queen ? "Queen"
-      : pt == Rook ? "Rook"
-      : pt == Bishop ? "Bishop"
-      : pt == Knight ? "Knight"
-      : pt == Pawn ? "Pawn"
-      : "NoType"
-      );
-}
 inline string pt_to_str(const PieceType pt) {
-   return (pt == King ? "King"
-      : pt == Queen ? "Queen"
-      : pt == Rook ? "Rook"
-      : pt == Bishop ? "Bishop"
-      : pt == Knight ? "Knight"
-      : pt == Pawn ? "Pawn"
-      : "");
+   if (pt >= 6) return "";
+   return array{
+      "Knight", "Bishop", "Rook",
+      "Queen", "King", "Pawn"
+   }[pt];
 }
-
 
 inline std::ostream& operator<<(std::ostream& os, Square sq) {
    if (sq == NoSquare) {
@@ -57,6 +43,7 @@ inline void print_bb(Bitboard bb) {
 }
 
 static const char pieces_char[] = {'N', 'B', 'R', 'Q', 'K', 'P'};
+
 [[maybe_unused]]
 static void print_board(Board& b, PieceColor p = NoColor) {
    for (int i = 7; i >= 0; --i) {

@@ -7,6 +7,7 @@
 #include "./utils.hpp"
 #include "./bitboard.hpp"
 #include "./move_gen.hpp"
+#include "zobrist.hpp"
 
 using std::string;
 using std::find_if;
@@ -19,6 +20,7 @@ Board::Board (const string &FEN)
 {
    move_history.reserve(64);
    movelist.reserve(64);
+   zobrist.reserve(64);
    load_fen(FEN);
 }
 
@@ -263,14 +265,7 @@ void Board::gen_board_legal_moves() {
          break;
       }
    }
-   if (state == Playing && fifty_move_counter == 100) state = Draw;
-}
-
-void Board::change_piece_pos(Square from, Square to) {
-   assert(is_ok(from) && is_ok(to));
-   const int i = get_pieceBB_index(from);
-   piecesBB[i] &= ~sqbb(from);
-   piecesBB[i] |= sqbb(to);
+   if (state == Playing && (fifty_move_counter == 100 || is_draw_by_repetition())) state = Draw;
 }
 
 bool Board::is_valid_move(const Square from, const Square to) const {
@@ -280,6 +275,13 @@ bool Board::is_valid_move(const Square from, const Square to) const {
       [&](const PieceMoves &pm){ return pm.pos == from && (sqbb(to) & pm.possible_moves); }
    );
    return x != movelist.end();
+}
+
+void Board::change_piece_pos(Square from, Square to) {
+   assert(is_ok(from) && is_ok(to));
+   const int i = get_pieceBB_index(from);
+   piecesBB[i] &= ~sqbb(from);
+   piecesBB[i] |= sqbb(to);
 }
 
 void Board::handle_castling_rights_changes(const Square from, const Square to) {
@@ -308,30 +310,37 @@ BoardErr Board::make_move(const Square from, const Square to, const PieceType pr
    if (!is_valid_move(from, to)) return InvalidMove;
    if (state == Draw || state == Checkmate) return GameOver;
 
+   // Zobrist
+   zobrist.emplace_back(calc_zobrist_key());
    MoveData md      = gen_move_data(from, to, promote_to);
    enpassant_square = NoSquare;
    handle_castling_rights_changes(from, to);
 
    // Fifty move rule
-   if (get_piece_type(from) == Pawn || get_piece_color(to) == ~color_to_play) fifty_move_counter = 0;
+   if (get_piece_type(from) == Pawn || get_piece_color(to) == ~color_to_play)
+      fifty_move_counter = 0, last_irreversible_move = zobrist.size();
    else fifty_move_counter++;
 
    // check if we should take a piece
    if (get_piece_color(to) == ~color_to_play) {
       remove_piece_at(to);
    }
-   if (md_get_move_type(md) == En_passant) { // take if en passant
+   if (md_get_move_type(md) == En_passant) { // Take if en passant
       remove_piece_at(to - 8*pawn_direction(color_to_play));
    }
+   // Check if we should set en passant square for the next move
    else if (get_piece_type(from) == Pawn && abs((int) (from - to)) == 8*2) {
       enpassant_square = from + 8*pawn_direction(color_to_play);
    }
+   // Handle promotion
    else if (md_get_move_type(md) == Promotion) {
       assert(promote_to == Queen || promote_to == Rook || promote_to == Bishop || promote_to == Knight);
       remove_piece_at(from);
       piecesBB.at(get_pieceBB_index(promote_to, color_to_play)) |= sqbb(to);
    }
+   // Handle caslting
    else if (md_get_move_type(md) == Castling) {
+      last_irreversible_move = zobrist.size();
       // king side
       if (from < to) change_piece_pos(to + 1, to - 1);
       // queen side
@@ -352,7 +361,7 @@ BoardErr Board::unmake_move() {
 
    color_to_play = ~color_to_play;
    const int i = color_to_play == White ? 0 : 6;
-   MoveData md = move_history[move_history.size() - 1];
+   const MoveData md = move_history.back();
    move_history.pop_back();
 
    const Square from = md_get_square_from(md);
@@ -393,4 +402,32 @@ BoardErr Board::unmake_move() {
    return NoErr;
 }
 
+Key Board::calc_zobrist_key() {
+   // TODO: this can be obtimized, there is no need to recalculate everything
+   // after each move
+   Key k{ color_to_play == Black ? Zobrist::side_to_move : 0 };
+   // Enpassant
+   if (enpassant_square != NoSquare) k ^= Zobrist::enpassant.at(get_file(enpassant_square));
+   // Castling rights
+   if (cr & White_OO)  k ^= Zobrist::castling_rights[0];
+   if (cr & White_OOO) k ^= Zobrist::castling_rights[1];
+   if (cr & Black_OO)  k ^= Zobrist::castling_rights[2];
+   if (cr & Black_OOO) k ^= Zobrist::castling_rights[3];
+   // Pieces
+   Bitboard pieces = all_pieces();
+   while (pieces) {
+      const Square sq = pop_lsb(pieces);
+      k ^= Zobrist::psq[get_pieceBB_index(sq)][sq];
+   }
+   return k;
+}
+
+bool Board::is_draw_by_repetition() const {
+   const Key lastkey = zobrist.back();
+   int cnt = 0;
+   for (auto i = last_irreversible_move + 1; i < zobrist.size(); i += 2) {
+      if (zobrist[i] == lastkey && ++cnt == 3) return true;
+   }
+   return false;
+}
 } // namespace Chess
