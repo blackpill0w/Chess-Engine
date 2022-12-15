@@ -8,7 +8,9 @@
 ** DONE Checkmake & Draw
 ** DONE Make sure move generation works
 ** DONE 50 move rule
-** TODO Draw by repitition
+** DONE Draw by repitition
+
+* TODO Add Tests
 
 * Search & Eval
 ** ??
