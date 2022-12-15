@@ -1,11 +1,27 @@
 #pragma once
 
+#include <chrono>
 #include <iostream>
 
 #include "./board.hpp"
 #include "./bitboard.hpp"
 
+//************************************************
+//
+// ** Run perft and return the number of nodes
+// Bitboard perft(Board& b, const int depth);
+// ** Run perft and print time to stdout
+// ** and return the number of nodes
+// Bitboard timed_perft(Board &b, int depth);
+//
+//************************************************
+
 using std::cout;
+using std::chrono::high_resolution_clock;
+using std::chrono::duration;
+using std::chrono::seconds;
+using std::milli;
+
 using namespace Chess;
 
 inline std::ostream& operator<<(std::ostream& os, PieceColor c) {
@@ -79,14 +95,15 @@ inline string sqstr(const Square sq) {
    return str;
 }
 
-inline string str_repeat(const string &str, int n) {
+[[maybe_unused]]
+inline string str_repeat(const string &str, const int n) {
    string res = "";
    for (int i = 0; i < n; ++i) res += str;
    return res;
 }
 
 [[maybe_unused]]
-inline Bitboard perft(Board &b, int depth, int original_depth = 0) {
+inline Bitboard perft(Board& b, const int depth, const int original_depth = 0) {
    if (depth == 0) return 1ull;
 
    int pos_num = 0;
@@ -110,21 +127,35 @@ inline Bitboard perft(Board &b, int depth, int original_depth = 0) {
       }
    }
 
-   int x = 0;
+   [[maybe_unused]] int x = 0;
    for (size_t i = 0; i < moves.size(); ++i) {
       string m = sqstr(moves[i].from) + sqstr(moves[i].to);
       if (b.get_piece_type(moves[i].from) == Pawn && (moves[i].to <= H1 || moves[i].to >= A8)) {
          m += pieces_char[moves[i].pt];
       }
       if (b.make_move(moves[i].from, moves[i].to, moves[i].pt) == Chess::InvalidMove) {
-         cout << "invalid\n";
+         cout << "Perft: invalid move: "
+              << sqstr(moves[i].from) << " -> " << sqstr(moves[i].to)
+              << '\n';
+         print_board(b);
          exit(1);
       };
       int j = perft(b, depth - 1, original_depth == 0 ? depth : original_depth);
       x = j;
       pos_num += j;
       b.unmake_move();
-      if (depth > 1) cout << str_repeat("-- ", depth) << ' ' << m << ' ' << x << '\n';
+      //if (depth > 1) cout << str_repeat("-- ", depth) << ' ' << m << ' ' << x << '\n';
    }
    return pos_num;
+}
+
+inline Bitboard timed_perft(Board &b, int depth) {
+   auto t1 = high_resolution_clock::now();
+   Bitboard nodes = perft(b, depth);
+   auto t2 = high_resolution_clock::now();
+   duration<double, milli> exec_time_ms = t2 - t1;
+   duration<double> exec_time_s = exec_time_ms;
+   cout << "Nodes: " << nodes << '\n';
+   cout << "Calculated in: " << exec_time_s.count() << "s, or " << exec_time_ms.count() << "ms\n" ;
+   return nodes;
 }

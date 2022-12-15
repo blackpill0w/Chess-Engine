@@ -5,12 +5,6 @@
 #include "./debug.hpp"
 
 using std::cin;
-using std::chrono::high_resolution_clock;
-using std::chrono::duration;
-using std::chrono::seconds;
-using std::milli;
-
-void timed_perft(Board &b, int depth);
 
 int main(int argc, char **argv) {
    // first arg is depth, and second is fen string
@@ -43,14 +37,4 @@ int main(int argc, char **argv) {
    }
 
    return 0;
-}
-
-void timed_perft(Board &b, int depth) {
-   auto t1 = high_resolution_clock::now();
-   Bitboard nodes = perft(b, depth);
-   auto t2 = high_resolution_clock::now();
-   duration<double, milli> exec_time_ms = t2 - t1;
-   duration<double> exec_time_s = exec_time_ms;
-   cout << "Nodes: " << nodes << '\n';
-   cout << "Calculated in: " << exec_time_s.count() << "s, or " << exec_time_ms.count() << "ms\n" ;
 }

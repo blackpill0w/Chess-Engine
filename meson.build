@@ -17,14 +17,21 @@ libengine_dep = declare_dependency(include_directories : incdir,
                                    link_with : libengine)
 
 raylib_cpp_dep = dependency('raylib-cpp')
+fmt_dep = dependency('fmt')
+
 executable('chess',
            'src/main.cpp',
            include_directories : incdir,
            link_with : libengine)
 
+executable('tests',
+           'src/tests.cpp',
+           include_directories : incdir,
+           link_with : libengine,
+           dependencies : fmt_dep)
+
 executable('chess-gui',
            'src/main2.cpp',
            include_directories : incdir,
            link_with : libengine,
-           dependencies : raylib_cpp_dep,
-          )
+           dependencies : raylib_cpp_dep)

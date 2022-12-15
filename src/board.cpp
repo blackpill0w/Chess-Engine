@@ -397,6 +397,8 @@ BoardErr Board::unmake_move() {
    enpassant_square = md_get_ep_square(md);
    fifty_move_counter = md_get_fmrc(md);
    state = Playing;
+   zobrist.pop_back();
+
    gen_board_legal_moves();
 
    return NoErr;

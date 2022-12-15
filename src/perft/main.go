@@ -1,10 +1,10 @@
 package main
 
 import "fmt"
-import "strings"
+//import "strings"
 import "github.com/dylhunn/dragontoothmg"
 
-func perft(board *dragontoothmg.Board, depth int) int {
+func perft(board *dragontoothmg.Board, depth int, print bool) int {
 	if (depth == 0) {
 		return 1
 	}
@@ -14,12 +14,12 @@ func perft(board *dragontoothmg.Board, depth int) int {
 
    for _, currMove := range moveList {
       unapplyFunc := board.Apply(currMove)
-      i := perft(board, depth - 1)
+      i := perft(board, depth - 1, print)
       nodes += i
-		if (depth != 1) {
-			strings.Repeat("-", 5)
+		//if (print && depth != 1) {
+			//strings.Repeat("-", 5)
 			//fmt.Println(strings.Repeat("-- ", depth), currMove.String(), i)
-		}
+		//}
       unapplyFunc()
    }
 	return nodes
@@ -27,5 +27,5 @@ func perft(board *dragontoothmg.Board, depth int) int {
 
 func main() {
    board := dragontoothmg.ParseFen("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - ")
-	fmt.Println("\nTotal: ", perft(&board, 5))
+	fmt.Println("\nTotal: ", perft(&board, 2, false))
 }
