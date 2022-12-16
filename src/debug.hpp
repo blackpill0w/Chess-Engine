@@ -16,13 +16,13 @@
 //
 //************************************************
 
-using std::cout;
 using std::chrono::high_resolution_clock;
 using std::chrono::duration;
 using std::chrono::seconds;
 using std::milli;
 
-using namespace Chess;
+namespace Chess
+{
 
 inline std::ostream& operator<<(std::ostream& os, PieceColor c) {
    return os << (c == White ? "White" : c == Black ? "Black" : "NoColor");
@@ -51,11 +51,11 @@ inline std::ostream& operator<<(std::ostream& os, Square sq) {
 inline void print_bb(Bitboard bb) {
    for (int i=7; i >= 0; --i) {
       for (unsigned j=0; j < 8; ++j) {
-         cout << ((bb & sqbb( Square(i*8+j) )) ? '1' : '.');
+         std::cout << ((bb & sqbb( Square(i*8+j) )) ? '1' : '.');
       }
-      cout << '\n';
+      std::cout << '\n';
    }
-   cout << '\n';
+   std::cout << '\n';
 }
 
 static const char pieces_char[] = {'N', 'B', 'R', 'Q', 'K', 'P'};
@@ -68,24 +68,14 @@ static void print_board(Board& b, PieceColor p = NoColor) {
          PieceType t = b.get_piece_type(sq);
          if (b.is_square_occupied(sq) && (p == NoColor || b.get_piece_color(sq) == p)) {
             char c = pieces_char[t] + (b.get_piece_color(sq) == White ? 0 : 32);
-            cout << c;
+            std::cout << c;
          }
-         else {
-            cout << '.';
-         }
+         else std::cout << '.';
       }
-      cout << '\n';
+      std::cout << '\n';
    }
-   cout << '\n';
+   std::cout << '\n';
 }
-
-struct Move {
-   Square from;
-   Square to;
-   PieceType pt;
-   Move(Square from, Square to, PieceType pt = Queen) : from{ from }, to{ to }, pt{ pt } {};
-   Move() : from{ NoSquare }, to{ NoSquare }, pt{ Queen } {};
-};
 
 [[maybe_unused]]
 inline string sqstr(const Square sq) {
@@ -107,25 +97,7 @@ inline Bitboard perft(Board& b, const int depth, const int original_depth = 0) {
    if (depth == 0) return 1ull;
 
    int pos_num = 0;
-   vector<Move> moves{};
-   moves.reserve(64);
-
-   for (auto pm: b.movelist) {
-      while (pm.possible_moves) {
-         Move m{ pm.pos, pop_lsb(pm.possible_moves), Queen };
-         Move *move = &m;
-         if (b.get_piece_type(pm.pos) == Pawn && (move->to <= H1 || move->to >= A8)) {
-            m.pt = Queen;
-            // promotion to other pieces
-            for (auto pt: { Rook, Bishop, Knight }) {
-               Move m = *move;
-               m.pt = pt;
-               moves.emplace_back(m);
-            }
-         }
-         moves.emplace_back(m);
-      }
-   }
+   const vector<Move> moves{ b.get_moves() };
 
    [[maybe_unused]] int x = 0;
    for (size_t i = 0; i < moves.size(); ++i) {
@@ -134,9 +106,8 @@ inline Bitboard perft(Board& b, const int depth, const int original_depth = 0) {
          m += pieces_char[moves[i].pt];
       }
       if (b.make_move(moves[i].from, moves[i].to, moves[i].pt) == Chess::InvalidMove) {
-         cout << "Perft: invalid move: "
-              << sqstr(moves[i].from) << " -> " << sqstr(moves[i].to)
-              << '\n';
+         std::cerr << "perft() invalid move: "
+              << sqstr(moves[i].from) << " -> " << sqstr(moves[i].to) << '\n';
          print_board(b);
          exit(1);
       };
@@ -144,7 +115,7 @@ inline Bitboard perft(Board& b, const int depth, const int original_depth = 0) {
       x = j;
       pos_num += j;
       b.unmake_move();
-      //if (depth > 1) cout << str_repeat("-- ", depth) << ' ' << m << ' ' << x << '\n';
+      //if (depth > 1) std::cout << str_repeat("-- ", depth) << ' ' << m << ' ' << x << '\n';
    }
    return pos_num;
 }
@@ -155,7 +126,9 @@ inline Bitboard timed_perft(Board &b, int depth) {
    auto t2 = high_resolution_clock::now();
    duration<double, milli> exec_time_ms = t2 - t1;
    duration<double> exec_time_s = exec_time_ms;
-   cout << "Nodes: " << nodes << '\n';
-   cout << "Calculated in: " << exec_time_s.count() << "s, or " << exec_time_ms.count() << "ms\n" ;
+   std::cout << "Nodes: " << nodes << '\n';
+   std::cout << "Calculated in: " << exec_time_s.count() << "s, or " << exec_time_ms.count() << "ms\n" ;
    return nodes;
 }
+
+} // namespace Chess

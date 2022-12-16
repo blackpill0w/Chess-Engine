@@ -277,6 +277,27 @@ bool Board::is_valid_move(const Square from, const Square to) const {
    return x != movelist.end();
 }
 
+vector<Move> Board::get_moves() const {
+   vector<Move> moves{};
+   moves.reserve(64);
+
+   for (auto pm: movelist) {
+      while (pm.possible_moves) {
+         Move m{ pm.pos, pop_lsb(pm.possible_moves), Queen };
+         moves.emplace_back(m);
+         // promotion to other pieces
+         if (get_piece_type(pm.pos) == Pawn && (m.to <= H1 || m.to >= A8)) {
+            for (auto pt: { Rook, Bishop, Knight }) {
+               Move move = m;
+               move.pt = pt;
+               moves.emplace_back(move);
+            }
+         }
+      }
+   }
+   return moves;
+}
+
 void Board::change_piece_pos(Square from, Square to) {
    assert(is_ok(from) && is_ok(to));
    const int i = get_pieceBB_index(from);

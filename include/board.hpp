@@ -15,6 +15,14 @@ using std::vector;
 // enum to access pieces' positions
 enum { WN, WB, WR, WQ, WK, WP, BN, BB, BR, BQ, BK, BP };
 
+struct Move {
+   Square from;
+   Square to;
+   PieceType pt;
+   Move(Square from, Square to, PieceType pt = Queen) : from{ from }, to{ to }, pt{ pt } {};
+   Move() : from{ NoSquare }, to{ NoSquare }, pt{ Queen } {};
+};
+
 struct PieceMoves {
    Square pos;
    Bitboard possible_moves;
@@ -146,6 +154,11 @@ public:
    */
    bool is_valid_move(const Square from, const Square to) const;
 
+   /*
+      TODO
+   */
+   vector<Move> get_moves() const;
+
    /*!
       TODO
    */
@@ -189,6 +202,7 @@ public:
       Check if draw by repetition.
    */
    bool is_draw_by_repetition() const;
+
 };
 
 } // namesapce Chess

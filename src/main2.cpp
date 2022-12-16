@@ -8,6 +8,8 @@
 #include "./board.hpp"
 #include "./utils.hpp"
 
+#include "./naive_materialistic_play.hpp"
+
 using std::array;
 using std::vector;
 using std::string;
@@ -107,7 +109,14 @@ int main(void) {
             pt = get_promotion_type(win);
          }
 
-         if (b.make_move(from, to, pt) == Chess::NoErr) load_pieces_from_board(b, pieces, txtrs);
+         if (b.make_move(from, to, pt) == Chess::NoErr) {
+            load_pieces_from_board(b, pieces, txtrs);
+            if (b.color_to_play == Black) {
+               const MoveEval me{ naive_materialistic_play(b, 3) };
+               b.make_move(me.move.from, me.move.to, me.move.pt);
+               load_pieces_from_board(b, pieces, txtrs);
+            }
+         }
          else pieces.at(selected_piece).pos = square_to_coordinates(from);
 
          selected_piece = -1;
