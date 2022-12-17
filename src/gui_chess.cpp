@@ -69,7 +69,7 @@ int main(void) {
    //Board b { "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 10" };
    //Board b{ "8/8/5p2/5k2/8/4KP2/8/8 w - - 99 57" };
 
-   Image board_img = LoadImage("../assets/img/chess-board.png");
+   Image board_img = LoadImage("../assets/img/board.png");
    ImageResize(&board_img, 8*pieceSize, 8*pieceSize);
    Texture2D board_txtr = LoadTextureFromImage(board_img);
    UnloadImage(board_img);
@@ -112,7 +112,7 @@ int main(void) {
          if (b.make_move(from, to, pt) == Chess::NoErr) {
             load_pieces_from_board(b, pieces, txtrs);
             if (b.color_to_play == Black) {
-               const MoveEval me{ naive_materialistic_play(b, 3) };
+               const MoveEval me{ naive_materialistic_play(b, 1) };
                b.make_move(me.move.from, me.move.to, me.move.pt);
                load_pieces_from_board(b, pieces, txtrs);
             }

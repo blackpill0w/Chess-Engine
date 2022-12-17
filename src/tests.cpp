@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
       else help(), exit(1);
    }
 
-   if (!extended_tests) fmt::print("Expected time: ~30 seconds\n\n");
+   if (!extended_tests) fmt::print("Expected time (release build): ~30 seconds\n\n");
 
    { // Test 1
       Chess::Board b{ "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8" };
