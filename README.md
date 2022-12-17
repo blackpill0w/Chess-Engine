@@ -1,14 +1,11 @@
 # Chess-Engine
 Chess Engine in C++17.
 # Dependencies
-- [meson](https://mesonbuild.com)
-- [fmt](https://github.com/fmtlib/fmt)
-- [raylib-cpp](https://github.com/robloach/raylib-cpp)
-# TODO
-Add fmt and raylib to the build file.
+- [cmake](https://cmake.org)
 # Building
-The engine works (should work) with GCC, Clang or ICC (tested only with GCC though).
-<br>Run this in a terminal (from the root directory of the project):
-<br>`meson setup --buildtype release build && cd build && meson compile`
-<br><br> This produces three binary files: `chess`, `chess-gui` and `tests`.
-<br> `chess` and `tests` are used only for debugging purposes while `chess-gui` can be used to play chess with a graphical display.
+The engine works with GCC, Clang or ICC (tested only with GCC though).
+<br>To build, run this in a terminal (from the root directory of the project):
+<br>`mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && cmake --build .`
+<br> Depending on the platform, you might want to specify the compiler with the option `-DCMAKE_CXX_COMPILER=g++`.
+<br><br> This produces three binary files: `chess_perft`, `chess_gui` and `chess_tests`.
+<br> `chess_perft` and `chess_tests` are used only for debugging purposes while `chess_gui` can be used to play chess with a graphical display.
