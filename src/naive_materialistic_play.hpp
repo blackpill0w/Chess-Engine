@@ -26,13 +26,16 @@ inline int calc_material(const Chess::Board& b) {
    return res;
 }
 
+// TODO: remove recursion, performance is terrible
 inline MoveEval naive_materialistic_play(Chess::Board& b, const unsigned depth) {
    MoveEval best{{}, b.color_to_play == Chess::White ? 99999 : -99999};
    for (auto& m: b.get_moves()) {
       b.make_move(m.from, m.to, m.pt);
 
       int eval = 0;
-      if (depth == 0) eval = calc_material(b);
+      if (b.get_state() == Chess::Checkmate) return {m, eval};
+      else if (b.get_state() == Chess::Draw) eval = 0;
+      else if (depth == 0) eval = calc_material(b);
       else {
          MoveEval best_move{ naive_materialistic_play(b, depth - 1) };
          eval = best_move.eval;
