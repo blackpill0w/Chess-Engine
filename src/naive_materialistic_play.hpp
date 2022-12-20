@@ -43,13 +43,19 @@ inline MoveEval alpha_beta_pruning(Chess::Board& b, const unsigned depth,
    MoveEval res{{}, maximizing_player ? -999 : 999 };
    for (auto& m: moves) {
       b.make_move(m.from, m.to, m.pt);
-      Chess::print_bb(b.all_pieces());
       MoveEval curr{m, };
 
       if (depth == 0) {
          curr.eval = calc_material(b);
          res = maximizing_player ? std::max(res, curr) : std::min(res, curr);
       }
+      else if (b.get_state() == Chess::Checkmate) {
+         curr.eval = maximizing_player ? 999 : -999;
+         res = curr;
+         b.unmake_move();
+         break;
+      }
+      else if (b.get_state() == Chess::Draw) res.eval = 0;
       else if (maximizing_player) {
          curr.eval = alpha_beta_pruning(b, depth - 1, false, alpha, beta).eval;
          res = std::max(res, curr);

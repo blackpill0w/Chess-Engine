@@ -40,8 +40,9 @@ constexpr int pieceMaxW    = winW - pieceSize / 2;
 constexpr int pieceMaxH    = winH - pieceSize / 2;
 
 
-int main(void) {
-   raylib::Window win{winW, winH, "Raylib"};
+int main(int argc, char **argv) {
+   const std::string fen{ argc > 1 ? argv[1] : Chess::standard_chess };
+   raylib::Window win{winW, winH, "Chess"};
    SetTargetFPS(60);
    win.SetPosition(40, 100);
 
@@ -62,7 +63,7 @@ int main(void) {
    array<Texture2D, 12> txtrs{};
    load_chess_textures(txtrs, chess_imgs);
 
-   Board b{ Chess::standard_chess };
+   Board b{ fen };
    //Board b { "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1" };
    //Board b{ "5k2/8/8/3qP3/b7/1N3Q2/8/3K1B2 w - - 0 1" };
    //Board b{ "8/P1p5/3p4/KP5r/1R3p1k/8/4P1P1/8 w - - 0 1" };
