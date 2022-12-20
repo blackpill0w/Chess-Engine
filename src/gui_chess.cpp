@@ -26,7 +26,7 @@ int get_piece_index_at(vector<ChessPiece>& pieces, Vector2 p);
 Vector2 square_to_coordinates(Square sq);
 Square coordinates_to_square(Vector2 v);
 void load_chess_textures(array<Texture2D, 12> &txtrs, const array<string, 12> &imgs);
-void load_pieces_from_board(Board &b, vector<ChessPiece> &pieces, array<Texture2D, 12> &txtrs);
+void load_pieces_from_board(const Board &b, vector<ChessPiece> &pieces, array<Texture2D, 12> &txtrs);
 void draw_text(const string& text);
 Chess::PieceType get_promotion_type(raylib::Window &win);
 
@@ -83,7 +83,7 @@ int main(void) {
    int selected_piece_moves = -1;
    const Color spm_color = ColorAlpha(raylib::Color(142, 193, 112), 0.75f);
 
-   Vector2 mouse_pos = {0};
+   Vector2 mouse_pos{};
    Square from = Chess::NoSquare;
    Square to = Chess::NoSquare;
    PieceType pt = Queen; // promotion type
@@ -112,7 +112,7 @@ int main(void) {
          if (b.make_move(from, to, pt) == Chess::NoErr) {
             load_pieces_from_board(b, pieces, txtrs);
             if (b.color_to_play == Black) {
-               const MoveEval me{ naive_materialistic_play(b, 1) };
+               const MoveEval me{ naive_materialistic_play(b, 3) };
                b.make_move(me.move.from, me.move.to, me.move.pt);
                load_pieces_from_board(b, pieces, txtrs);
             }
@@ -208,17 +208,16 @@ void load_chess_textures(array<Texture2D, 12>& txtrs, const array<string, 12>& i
    }
 }
 
-void load_pieces_from_board(Board &b, vector<ChessPiece> &pieces, array<Texture2D, 12> &txtrs) {
+void load_pieces_from_board(const Board &b, vector<ChessPiece> &pieces, array<Texture2D, 12> &txtrs) {
    pieces.clear();
-   for (Square sq = A1; sq <= H8; ++sq) {
-      const PieceType t = b.get_piece_type(sq);
-      if (t != NoType) {
-         ChessPiece p = {
-            square_to_coordinates(sq),
-            &txtrs[t + (b.get_piece_color(sq) == White ? 0 : 6)],
-         };
-         pieces.emplace_back(p);
-      }
+   Chess::Bitboard piecesBB = b.all_pieces();
+   while (piecesBB) {
+      const Chess::Square sq = Chess::pop_lsb(piecesBB);
+      ChessPiece p = {
+         square_to_coordinates(sq),
+         &txtrs[b.get_pieceBB_index(sq)],
+      };
+      pieces.emplace_back(p);
    }
 }
 

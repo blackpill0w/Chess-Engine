@@ -4,6 +4,8 @@
 #include "./bitboard.hpp"
 #include "./debug.hpp"
 
+#include <cstdint>
+#include <limits.h>
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -11,7 +13,11 @@
 
 struct MoveEval {
    Chess::Move move{};
-   int eval = 0;
+   int eval{};
+   bool operator<(const MoveEval& other) const { return eval < other.eval; }
+   bool operator>(const MoveEval& other) const { return eval > other.eval; }
+   bool operator<=(const MoveEval& other) const { return eval <= other.eval; }
+   bool operator>=(const MoveEval& other) const { return eval >= other.eval; }
 };
 
 inline int calc_material(const Chess::Board& b) {
@@ -25,26 +31,48 @@ inline int calc_material(const Chess::Board& b) {
    return res;
 }
 
-// TODO: remove recursion, performance is terrible
-inline MoveEval naive_materialistic_play(Chess::Board& b, const unsigned depth) {
-   std::vector<MoveEval> res;
-   res.reserve(64);
-   for (auto& m: b.get_moves()) {
-      b.make_move(m.from, m.to, m.pt);
-      int eval = 0;
-      if (b.get_state() == Chess::Checkmate) eval = b.color_to_play == Chess::White ? -99999 : +99999;
-      else if (b.get_state() == Chess::Draw) eval = 0;
-      else if (depth == 0) eval = calc_material(b);
-      else {
-         MoveEval best_move{ naive_materialistic_play(b, depth - 1) };
-         eval = best_move.eval;
-      }
+inline MoveEval alpha_beta_pruning(Chess::Board& b, const unsigned depth,
+                                   const bool maximizing_player,
+                                   int alpha, int beta)
+{
+   std::vector<Chess::Move> moves{ b.get_moves() };
+   std::sort(moves.begin(), moves.end(),
+             [&](const Chess::Move& m1, const Chess::Move& m2){ return m1.less_than(m2, b); }
+      );
 
-      res.emplace_back(MoveEval{m, eval});
+   MoveEval res{{}, maximizing_player ? -999 : 999 };
+   for (auto& m: moves) {
+      b.make_move(m.from, m.to, m.pt);
+      Chess::print_bb(b.all_pieces());
+      MoveEval curr{m, };
+
+      if (depth == 0) {
+         curr.eval = calc_material(b);
+         res = maximizing_player ? std::max(res, curr) : std::min(res, curr);
+      }
+      else if (maximizing_player) {
+         curr.eval = alpha_beta_pruning(b, depth - 1, false, alpha, beta).eval;
+         res = std::max(res, curr);
+         alpha = std::max(alpha, curr.eval);
+         if (beta <= alpha) {
+            b.unmake_move();
+            break;
+         }
+      }
+      else {
+         curr.eval = alpha_beta_pruning(b, depth - 1, true, alpha, beta).eval;
+         res = std::min(res, curr);
+         beta = std::min(beta, curr.eval);
+         if (beta <= alpha) {
+            b.unmake_move();
+            break;
+         }
+      }
       b.unmake_move();
    }
-   auto best = b.color_to_play == Chess::White ?
-      *std::max_element(res.begin(), res.end(), [](const MoveEval& me1, const MoveEval& me2){ return me1.eval > me2.eval; })
-      :*std::min_element(res.begin(), res.end(), [](const MoveEval& me1, const MoveEval& me2){ return me1.eval < me2.eval; });
-   return best;
+   return res;
+}
+
+inline MoveEval naive_materialistic_play(Chess::Board& b, const unsigned depth) {
+   return alpha_beta_pruning(b, depth, b.color_to_play == Chess::White, -999, 999);
 }

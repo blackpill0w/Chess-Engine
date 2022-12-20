@@ -15,6 +15,27 @@ using std::find_if;
 namespace Chess
 {
 
+bool Move::is_capture(const Board& b) const {
+   return 0 != (to & b.all_pieces());
+}
+bool Move::is_castle(const Board& b) const {
+   return b.get_piece_type(from) == King && abs((int) (to - from)) == 2;
+}
+bool Move::is_promotion(const Board& b) const {
+   return b.get_piece_type(from) == Pawn && (to <= H1 || to >= A8);
+}
+int Move::getval(const Board& b) const {
+   // The values returned are just arbitrary numbers,
+   // the important is for promotion to be greater than normal move etc.
+   return is_promotion(b) ? 50
+      : is_capture(b) ? 25
+      : is_castle(b) ? 12
+      : 1;
+}
+bool Move::less_than(const Move& other, const Board& b) const {
+   return getval(b) < other.getval(b);
+}
+
 Board::Board (const string &FEN)
    : piecesBB{}, move_history{}, movelist{}
 {
@@ -55,19 +76,14 @@ Bitboard Board::get_pieces(const PieceColor c, const PieceType pt) const {
 }
 
 PieceType Board::get_piece_type(const Square sq) const {
-   PieceType t = NoType;
-   for (size_t i = 0; i < piecesBB.size(); ++i) {
-      if (sqbb(sq) & piecesBB[i]) {
-         t = (i == WK || i == BK) ? King
-            : (i == WQ || i == BQ) ? Queen
-            : (i == WR || i == BR) ? Rook
-            : (i == WB || i == BB) ? Bishop
-            : (i == WN || i == BN) ? Knight
-            : Pawn;
-         break;
-      }
-   }
-   return t;
+      const Bitboard bb = sqbb(sq);
+      return (bb & piecesBB[WK] || bb & piecesBB[BK]) ? King
+         : (bb & piecesBB[WQ] || bb & piecesBB[BQ]) ? Queen
+         : (bb & piecesBB[WR] || bb & piecesBB[BR]) ? Rook
+         : (bb & piecesBB[WB] || bb & piecesBB[BB]) ? Bishop
+         : (bb & piecesBB[WN] || bb & piecesBB[BN]) ? Knight
+         : (bb & piecesBB[WP] || bb & piecesBB[BP]) ? Pawn
+         : NoType;
 }
 
 size_t Board::get_pieceBB_index(const Square sq) const {
@@ -186,16 +202,14 @@ void Board::gen_board_legal_moves() {
    const Square king_sq = lsb(get_pieces(color_to_play, King));
 
    // Generated squares attacked by the enemy
-   for (Square sq = A1; sq <= H8; ++sq) {
-      // no need to check if bit is set because `get_piece_color()` returns
-      // `NoColor` if the square is empty.
-      if (get_piece_color(sq) == ~color_to_play) {
-         if (get_piece_type(sq) == Pawn) {
-            attacked_by_enemy |= gen_piece_moves(sq, ~0, 0);
-         }
-         else {
-            attacked_by_enemy |= gen_piece_moves(sq, all_pieces() & ~sqbb(king_sq), 0);
-         }
+   Bitboard pieces = get_pieces(~color_to_play);
+   while (pieces) {
+      const Square sq = pop_lsb(pieces);
+      if (get_piece_type(sq) == Pawn) {
+         attacked_by_enemy |= gen_piece_moves(sq, ~0, 0);
+      }
+      else {
+         attacked_by_enemy |= gen_piece_moves(sq, all_pieces() & ~sqbb(king_sq), 0);
       }
    }
    // Checks
@@ -221,16 +235,18 @@ void Board::gen_board_legal_moves() {
       }
    }
 
-   for (Square sq = A1; sq <= H8; ++sq) {
-      if (get_piece_color(sq) != color_to_play) {
-         continue;
-      }
+   Bitboard mypieces = get_pieces(color_to_play);
+   // Generate legal moves
+   while (mypieces) {
+      const Square sq = pop_lsb(mypieces);
+
+      // En passant target is considered an occupied square in pawn move generation
+      // to make it simpler
       const Bitboard ep = get_piece_type(sq) == Pawn ? sqbb(enpassant_square) : 0;
-      PieceMoves pm{ sq, gen_piece_moves(sq, all_pieces() | ep, get_pieces(color_to_play, NoType)) };
-      if (get_piece_type(sq) == Pawn
-          && (((sqbb(enpassant_square) >> 8) & attackers) || ((sqbb(enpassant_square) << 8) & attackers))
-         ) {
-         pm.possible_moves &= possible_moves | sqbb(enpassant_square);
+      PieceMoves pm{ sq, gen_piece_moves(sq, all_pieces() | ep, get_pieces(color_to_play)) };
+
+      if (get_piece_type(sq) == Pawn && (((ep >> 8) & attackers) || ((ep << 8) & attackers))) {
+         pm.possible_moves &= possible_moves | ep;
       }
       else if (sq != king_sq) {
          pm.possible_moves &= possible_moves;

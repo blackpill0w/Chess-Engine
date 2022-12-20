@@ -15,12 +15,18 @@ using std::vector;
 // enum to access pieces' positions
 enum { WN, WB, WR, WQ, WK, WP, BN, BB, BR, BQ, BK, BP };
 
+struct Board;
 struct Move {
    Square from;
    Square to;
    PieceType pt;
    Move(Square from, Square to, PieceType pt = Queen) : from{ from }, to{ to }, pt{ pt } {};
    Move() : from{ NoSquare }, to{ NoSquare }, pt{ Queen } {};
+   int getval(const Board& b) const;
+   bool less_than(const Move& other, const Board& b) const;
+   bool is_capture(const Board& b) const;
+   bool is_castle(const Board& b) const;
+   bool is_promotion(const Board& b) const;
 };
 
 struct PieceMoves {
@@ -99,7 +105,7 @@ public:
    /*
       TODO
    */
-   Bitboard get_pieces(const PieceColor c, const PieceType pt) const;
+   Bitboard get_pieces(const PieceColor c, const PieceType pt = NoType) const;
 
    /*!
       Get the type of a piece.
