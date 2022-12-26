@@ -1,5 +1,5 @@
 #include <iostream>
-#include <map>
+#include <array>
 
 #include <raylib.h>
 
@@ -13,12 +13,12 @@ namespace consts {
    constexpr int winH = pieceSize*8;
 }
 
-using TexturesMap = std::map<Chess::PieceBBIndex, Texture>;
+using TexturesArr = std::array<Texture, 12>;
 
 Vector2 sq_to_v(const Chess::Square sq);
 Chess::Square v_to_sq(const Vector2 v);
-TexturesMap get_textures();
-void draw_board(const Chess::Board &b, TexturesMap &txtrs);
+TexturesArr get_textures();
+void draw_board(const Chess::Board &b, TexturesArr &txtrs);
 void draw_text(const std::string &text);
 Chess::PieceType get_promotion_type();
 
@@ -27,7 +27,7 @@ int main() {
    SetTargetFPS(60);
 
    Texture2D board_txtr = LoadTexture("../assets/img/board.png");
-   TexturesMap txtrs = get_textures();
+   TexturesArr txtrs = get_textures();
 
    Chess::Board b{ Chess::standard_chess };
    // Saves the piece to move
@@ -72,7 +72,7 @@ int main() {
    }
 
    UnloadTexture(board_txtr);
-   for (auto& [i, txtr]: txtrs) UnloadTexture(txtr);
+   for (auto& txtr: txtrs) UnloadTexture(txtr);
    CloseWindow();
 }
 
@@ -89,9 +89,9 @@ Chess::Square v_to_sq(const Vector2 v) {
    return sq;
 }
 
-TexturesMap get_textures() {
+TexturesArr get_textures() {
    using namespace Chess;
-   TexturesMap txtrs{};
+   TexturesArr txtrs{};
    txtrs[WP] = LoadTexture("../assets/img/pieces/wp.png");
    txtrs[WN] = LoadTexture("../assets/img/pieces/wn.png");
    txtrs[WB] = LoadTexture("../assets/img/pieces/wb.png");
@@ -109,7 +109,7 @@ TexturesMap get_textures() {
    return txtrs;
 }
 
-void draw_board(const Chess::Board &b, TexturesMap &txtrs) {
+void draw_board(const Chess::Board &b, TexturesArr &txtrs) {
    Chess::Bitboard piecesBB = b.all_pieces();
    while (piecesBB) {
       const Chess::Square sq = Chess::pop_lsb(piecesBB);
