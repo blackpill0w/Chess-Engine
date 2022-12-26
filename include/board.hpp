@@ -134,6 +134,11 @@ public:
    bool is_castle(const Square from, const Square to) const;
    bool is_promotion(const Square from, const Square to) const;
 
+   /*!
+      TODO
+   */
+   vector<Square> get_possible_moves(const Square sq) const;
+
    /*
      Check if king to play is in check.
    */

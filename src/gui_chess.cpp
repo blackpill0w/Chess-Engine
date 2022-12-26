@@ -1,9 +1,11 @@
 #include <iostream>
 #include <array>
+#include <vector>
 
 #include <raylib.h>
 
 #include "./board.hpp"
+#include "./debug.hpp"
 #include "./bitboard.hpp"
 
 namespace consts {
@@ -45,7 +47,9 @@ int main() {
          }
          else {
             const Chess::Square to = v_to_sq(mp);
-            if (b.is_promotion(from, to)) pt = get_promotion_type();
+            // Get piece to promote to
+            if (b.is_valid_move(from, to) && b.is_promotion(from, to))
+               pt = get_promotion_type();
             b.make_move(from, to, pt);
             from = Chess::NoSquare;
             pt = Chess::Queen;
@@ -61,6 +65,12 @@ int main() {
          const Vector2 v = sq_to_v(from);
          DrawRectangle(v.x, v.y, consts::pieceSize, consts::pieceSize,
                         Color{255, 0, 0, 100});
+         std::vector<Chess::Square> possible_moves{ b.get_possible_moves(from) };
+         for (auto sq: possible_moves) {
+            const Vector2 tmp = sq_to_v(sq);
+            DrawRectangle(tmp.x, tmp.y, consts::pieceSize, consts::pieceSize,
+                        Color{255, 0, 0, 100});
+         }
       }
       draw_board(b, txtrs);
 

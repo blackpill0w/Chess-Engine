@@ -108,7 +108,24 @@ bool Board::is_castle(const Square from, const Square to) const {
 }
 
 bool Board::is_promotion(const Square from, const Square to) const {
-   return get_piece_type(from) == Pawn && (to <= H1 || to >= A8);
+   return (((sqbb(from) & piecesBB[WP]) && get_rank(to) == rank8)
+    || ((sqbb(from) & piecesBB[BP]) && get_rank(to) == rank1)
+   );
+}
+
+vector<Square> Board::get_possible_moves(const Square sq) const {
+   auto piece = find_if(
+      movelist.begin(),
+      movelist.end(),
+      [&](const PieceMoves &pm){ return pm.pos == sq; }
+   );
+   if (piece == movelist.end()) return {};
+
+   std::vector<Square> res{};
+   res.reserve(16);
+   Bitboard possible_moves = piece->possible_moves;
+   while (possible_moves) res.emplace_back(pop_lsb(possible_moves));
+   return res;
 }
 
 void Board::remove_piece_at(const Square sq) {
