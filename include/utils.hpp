@@ -24,8 +24,6 @@ inline T& operator--(T& d) { return d = T(int(d) - 1); }
 using std::size_t;
 using std::array;
 
-inline size_t constexpr invalid_index = 99999999;
-
 using Key      = uint64_t; // For Zobrist
 using Bitboard = uint64_t;
 using PiecePos = uint64_t;

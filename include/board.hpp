@@ -13,7 +13,7 @@ using std::array;
 using std::vector;
 
 // enum to access pieces' positions
-enum { WN, WB, WR, WQ, WK, WP, BN, BB, BR, BQ, BK, BP };
+enum PieceBBIndex : size_t { WN, WB, WR, WQ, WK, WP, BN, BB, BR, BQ, BK, BP, invalid_index = 99999999999 };
 
 struct Board;
 struct Move {
@@ -24,9 +24,6 @@ struct Move {
    Move() : from{ NoSquare }, to{ NoSquare }, pt{ Queen } {};
    int getval(const Board& b) const;
    bool less_than(const Move& other, const Board& b) const;
-   bool is_capture(const Board& b) const;
-   bool is_castle(const Board& b) const;
-   bool is_promotion(const Board& b) const;
 };
 
 struct PieceMoves {
@@ -116,8 +113,8 @@ public:
    /*!
       Return the index of the bitboard containing the piece if it exists.
    */
-   size_t get_pieceBB_index(const Square sq) const;
-   size_t get_pieceBB_index(const PieceType pt, const PieceColor c) const;
+   PieceBBIndex get_pieceBB_index(const Square sq) const;
+   PieceBBIndex get_pieceBB_index(const PieceType pt, const PieceColor c) const;
 
    /*!
       Get color of a piece given its positions.
@@ -129,6 +126,13 @@ public:
      Check if a square is occupied.
    */
    bool is_square_occupied(const Square sq) const;
+
+   /*!
+      TODO
+   */
+   bool is_capture(const Square to) const;
+   bool is_castle(const Square from, const Square to) const;
+   bool is_promotion(const Square from, const Square to) const;
 
    /*
      Check if king to play is in check.

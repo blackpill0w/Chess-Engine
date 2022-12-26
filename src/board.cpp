@@ -7,7 +7,7 @@
 #include "./utils.hpp"
 #include "./bitboard.hpp"
 #include "./move_gen.hpp"
-#include "zobrist.hpp"
+#include "./zobrist.hpp"
 
 using std::string;
 using std::find_if;
@@ -15,21 +15,12 @@ using std::find_if;
 namespace Chess
 {
 
-bool Move::is_capture(const Board& b) const {
-   return 0 != (to & b.all_pieces());
-}
-bool Move::is_castle(const Board& b) const {
-   return b.get_piece_type(from) == King && abs((int) (to - from)) == 2;
-}
-bool Move::is_promotion(const Board& b) const {
-   return b.get_piece_type(from) == Pawn && (to <= H1 || to >= A8);
-}
 int Move::getval(const Board& b) const {
    // The values returned are just arbitrary numbers,
    // the important is for promotion to be greater than normal move etc.
-   return is_promotion(b) ? 50
-      : is_capture(b) ? 25
-      : is_castle(b) ? 12
+   return b.is_promotion(from, to) ? 50
+      : b.is_capture(to) ? 25
+      : b.is_castle(from, to) ? 12
       : 1;
 }
 bool Move::less_than(const Move& other, const Board& b) const {
@@ -77,22 +68,23 @@ Bitboard Board::get_pieces(const PieceColor c, const PieceType pt) const {
 
 PieceType Board::get_piece_type(const Square sq) const {
       const Bitboard bb = sqbb(sq);
-      return (bb & piecesBB[WK] || bb & piecesBB[BK]) ? King
-         : (bb & piecesBB[WQ] || bb & piecesBB[BQ]) ? Queen
-         : (bb & piecesBB[WR] || bb & piecesBB[BR]) ? Rook
+      return (bb & piecesBB[WP] || bb & piecesBB[BP]) ? Pawn
          : (bb & piecesBB[WB] || bb & piecesBB[BB]) ? Bishop
          : (bb & piecesBB[WN] || bb & piecesBB[BN]) ? Knight
-         : (bb & piecesBB[WP] || bb & piecesBB[BP]) ? Pawn
+         : (bb & piecesBB[WR] || bb & piecesBB[BR]) ? Rook
+         : (bb & piecesBB[WQ] || bb & piecesBB[BQ]) ? Queen
+         : (bb & piecesBB[WK] || bb & piecesBB[BK]) ? King
          : NoType;
 }
 
-size_t Board::get_pieceBB_index(const Square sq) const {
-   for (size_t i = 0; i < piecesBB.size(); ++i) if (sqbb(sq) & piecesBB[i]) return i;
+PieceBBIndex Board::get_pieceBB_index(const Square sq) const {
+   for (size_t i = 0; i < piecesBB.size(); ++i)
+      if (sqbb(sq) & piecesBB[i]) return PieceBBIndex(i);
    return invalid_index;
 }
 
-size_t Board::get_pieceBB_index(const PieceType pt, const PieceColor c) const {
-   return pt + (c == White ? 0 : 6);
+PieceBBIndex Board::get_pieceBB_index(const PieceType pt, const PieceColor c) const {
+   return PieceBBIndex(pt + (c == White ? 0 : 6));
 }
 
 PieceColor Board::get_piece_color(const Square sq) const {
@@ -107,6 +99,18 @@ bool Board::in_check() const {
    return get_pieces(color_to_play, King) & attacked_by_enemy;
 }
 
+bool Board::is_capture(const Square to) const {
+   return 0 != (to & all_pieces());
+}
+
+bool Board::is_castle(const Square from, const Square to) const {
+   return get_piece_type(from) == King && abs((int) (to - from)) == 2;
+}
+
+bool Board::is_promotion(const Square from, const Square to) const {
+   return get_piece_type(from) == Pawn && (to <= H1 || to >= A8);
+}
+
 void Board::remove_piece_at(const Square sq) {
    piecesBB[get_pieceBB_index(sq)] &= ~sqbb(sq);
 }
@@ -115,15 +119,11 @@ MoveData Board::gen_move_data(const Square from, const Square to, const PieceTyp
    MoveType mt = Normal;
    PieceType pt = get_piece_type(from);
    PieceType taken_pt = get_piece_type(to);
-   if (pt == Pawn) {
-      if (to <= H1 || to >= A8) {
-         mt = Promotion;
-      }
-      else if (to == enpassant_square) {
-         mt = En_passant;
-      }
+   if (is_promotion(from, to)) mt = Promotion;
+   else if (pt == Pawn && to == enpassant_square) {
+      mt = En_passant;
    }
-   else if (pt == King && abs((int) (to - from)) == 2) {
+   else if (is_castle(from, to)) {
       mt = Castling;
    }
    return new_md(from, to, promote_to, mt, taken_pt, cr, enpassant_square, fifty_move_counter);
@@ -302,7 +302,7 @@ vector<Move> Board::get_moves() const {
          Move m{ pm.pos, pop_lsb(pm.possible_moves), Queen };
          moves.emplace_back(m);
          // promotion to other pieces
-         if (get_piece_type(pm.pos) == Pawn && (m.to <= H1 || m.to >= A8)) {
+         if (is_promotion(m.from, m.to)) {
             for (auto pt: { Rook, Bishop, Knight }) {
                Move move = m;
                move.pt = pt;
@@ -465,7 +465,7 @@ bool Board::is_draw_by_repetition() const {
    const Key lastkey = zobrist.back();
    int cnt = 0;
    for (auto i = last_irreversible_move + 1; i < zobrist.size(); i += 2) {
-      if (zobrist[i] == lastkey && ++cnt == 3) return true;
+      if (zobrist.at(i) == lastkey && ++cnt == 3) return true;
    }
    return false;
 }
