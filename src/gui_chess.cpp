@@ -9,7 +9,7 @@
 #include "./bitboard.hpp"
 
 namespace consts {
-   // size of image to avoid complicating stuff
+   // size of image = size of image to avoid complicating stuff
    constexpr int pieceSize = 60;
    constexpr int winW = pieceSize*8;
    constexpr int winH = pieceSize*8;
