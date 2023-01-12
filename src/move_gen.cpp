@@ -41,20 +41,20 @@ Bitboard gen_sliding_piece_moves(const Square sq, const PieceType t, const Bitbo
    const unsigned start = (t == Bishop) ? bishop_dir_start : rook_dir_start;
    const unsigned end = (t == Rook) ? rook_dir_end : bishop_dir_end;
    for (unsigned i = start; i <= end; ++i) {
-      if (sqbb(sq) & dir_masks[i]) {
+      if (sqbb(sq) & dir_masks.at(i)) {
          continue;
       }
-      Square pos = sq + dir[i];
+      Square pos = sq + dir.at(i);
       while (pos >= A1 && pos <= H8) {
          if (sqbb(pos) & occ) {
             res |= sqbb(pos);
             break;
          }
          res |= sqbb(pos);
-         if (sqbb(pos) & dir_masks[i]) {
+         if (sqbb(pos) & dir_masks.at(i)) {
             break;
          }
-         pos += dir[i];
+         pos += dir.at(i);
       }
    }
    return res & ~mypieces;
@@ -63,8 +63,8 @@ Bitboard gen_sliding_piece_moves(const Square sq, const PieceType t, const Bitbo
 Bitboard gen_knight_moves(const Square sq, const Bitboard occ, const Bitboard mypieces) {
    Bitboard res = 0;
    for (int i = 0; i < 8; ++i) {
-      const Square target = sq + knight_moves[i];
-      res |= sqbb(target) & knight_moves_corresponding_mask[i];
+      const Square target = sq + knight_moves.at(i);
+      res |= sqbb(target) & knight_moves_corresponding_mask.at(i);
    }
    return res & ~mypieces;
 }
@@ -72,10 +72,10 @@ Bitboard gen_knight_moves(const Square sq, const Bitboard occ, const Bitboard my
 Bitboard gen_king_moves(const Square sq, const Bitboard occ, const Bitboard mypieces, const PieceColor c, const CastlingRights cr) {
    Bitboard res = 0;
    for (int i = 0; i < 8; ++i) {
-      if (sqbb(sq) & dir_masks[i]) {
+      if (sqbb(sq) & dir_masks.at(i)) {
          continue;
       }
-      const Square target = sq + dir[i];
+      const Square target = sq + dir.at(i);
       res |= sqbb(target);
    }
 

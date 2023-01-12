@@ -69,6 +69,7 @@ void Board::load_fen(const string& FEN) {
    if (tokens.size() > 4) fifty_move_counter = std::stoi(tokens[4]);
 
    gen_board_legal_moves();
+   zobrist.emplace_back(calc_zobrist_key());
 }
 
 string trim(const string &str) {

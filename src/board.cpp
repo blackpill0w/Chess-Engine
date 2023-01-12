@@ -28,7 +28,7 @@ bool Move::less_than(const Move& other, const Board& b) const {
 }
 
 Board::Board (const string &FEN)
-   : piecesBB{}, move_history{}, movelist{}
+   : piecesBB{}, move_history{}, movelist{}, zobrist{}
 {
    move_history.reserve(64);
    movelist.reserve(64);
@@ -79,7 +79,7 @@ PieceType Board::get_piece_type(const Square sq) const {
 
 PieceBBIndex Board::get_pieceBB_index(const Square sq) const {
    for (size_t i = 0; i < piecesBB.size(); ++i)
-      if (sqbb(sq) & piecesBB[i]) return PieceBBIndex(i);
+      if (sqbb(sq) & piecesBB.at(i)) return PieceBBIndex(i);
    return invalid_index;
 }
 
@@ -192,7 +192,7 @@ void Board::limit_moves_of_pinned_pieces() {
       (rank_bb(king_sq) | file_bb(king_sq)) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Rook)),
       (diagonal_bb(king_sq) | anti_diagonal_bb(king_sq)) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Bishop))
    };
-   for (auto i : possible_pinners) {
+   for (auto i : possible_pinners) { // copy not reference
       while (i) {
          const Square pinner = pop_lsb(i);
          const Bitboard between = between_bb(king_sq, pinner);
@@ -202,7 +202,7 @@ void Board::limit_moves_of_pinned_pieces() {
                movelist.end(),
                [&](PieceMoves &pm){ return 0 != (sqbb(pm.pos) & between); }
             );
-            pm->possible_moves &= between;
+            if (pm != movelist.end()) pm->possible_moves &= between;
          }
       }
    }
@@ -314,7 +314,7 @@ vector<Move> Board::get_moves() const {
    vector<Move> moves{};
    moves.reserve(64);
 
-   for (auto pm: movelist) {
+   for (auto pm: movelist) { // copy to use pop_lsb
       while (pm.possible_moves) {
          Move m{ pm.pos, pop_lsb(pm.possible_moves), Queen };
          moves.emplace_back(m);
@@ -334,8 +334,8 @@ vector<Move> Board::get_moves() const {
 void Board::change_piece_pos(Square from, Square to) {
    assert(is_ok(from) && is_ok(to));
    const int i = get_pieceBB_index(from);
-   piecesBB[i] &= ~sqbb(from);
-   piecesBB[i] |= sqbb(to);
+   piecesBB.at(i) &= ~sqbb(from);
+   piecesBB.at(i) |= sqbb(to);
 }
 
 void Board::handle_castling_rights_changes(const Square from, const Square to) {
@@ -365,14 +365,16 @@ BoardErr Board::make_move(const Square from, const Square to, const PieceType pr
    if (state == Draw || state == Checkmate) return GameOver;
 
    // Zobrist
-   zobrist.emplace_back(calc_zobrist_key());
    MoveData md      = gen_move_data(from, to, promote_to);
    enpassant_square = NoSquare;
    handle_castling_rights_changes(from, to);
 
    // Fifty move rule
-   if (get_piece_type(from) == Pawn || get_piece_color(to) == ~color_to_play)
-      fifty_move_counter = 0, last_irreversible_move = zobrist.size();
+   if (get_piece_type(from) == Pawn || get_piece_color(to) == ~color_to_play) {
+      fifty_move_counter = 0;
+      // size() because it hasn't been added yet
+      last_irreversible_move = zobrist.size();
+   }
    else fifty_move_counter++;
 
    // check if we should take a piece
@@ -403,6 +405,7 @@ BoardErr Board::make_move(const Square from, const Square to, const PieceType pr
 
    if (md_get_move_type(md) != Promotion) change_piece_pos(from, to);
    move_history.emplace_back(md);
+   zobrist.emplace_back(calc_zobrist_key());
 
    color_to_play = ~color_to_play;
    gen_board_legal_moves();
@@ -479,10 +482,10 @@ Key Board::calc_zobrist_key() {
 }
 
 bool Board::is_draw_by_repetition() const {
-   const Key lastkey = zobrist.back();
+   const int lastkey = zobrist.size() - 1;
    int cnt = 0;
-   for (auto i = last_irreversible_move + 1; i < zobrist.size(); i += 2) {
-      if (zobrist.at(i) == lastkey && ++cnt == 3) return true;
+   for (int i = last_irreversible_move + 1; i < zobrist.size(); i++) {
+      if (zobrist.at(i) == zobrist.at(lastkey) && ++cnt == 3) return true;
    }
    return false;
 }

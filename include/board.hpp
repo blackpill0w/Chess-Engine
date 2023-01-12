@@ -30,7 +30,7 @@ struct PieceMoves {
    Square pos;
    Bitboard possible_moves;
    PieceMoves() : pos{ NoSquare }, possible_moves{} {};
-   PieceMoves(Square sq, Bitboard bb) : pos{sq}, possible_moves{bb} {};
+   PieceMoves(Square sq, Bitboard bb) : pos{ sq }, possible_moves{ bb } {};
 };
 
 inline const string standard_chess = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -64,7 +64,7 @@ public:
    // Zobrist
    vector<Key> zobrist;
    // To optimize checking for draw by repetition
-   size_t last_irreversible_move = 0;
+   int last_irreversible_move = 0;
 public:
    /*!
      Default constructor.

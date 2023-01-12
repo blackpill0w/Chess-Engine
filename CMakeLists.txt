@@ -51,5 +51,3 @@ target_link_libraries(chess_perft chess_engine)
 set(gui_sources src/gui_chess.cpp)
 add_executable(chess_gui ${gui_sources})
 target_link_libraries(chess_gui chess_engine raylib)
-
-

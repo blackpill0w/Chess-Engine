@@ -1,12 +1,15 @@
 #include <iostream>
 #include <array>
 #include <vector>
+#include <thread>
+#include <atomic>
 
 #include <raylib.h>
 
 #include "./board.hpp"
 #include "./debug.hpp"
 #include "./bitboard.hpp"
+#include "./search.hpp"
 
 namespace consts {
    // size of image = size of image to avoid complicating stuff
@@ -18,7 +21,7 @@ namespace consts {
 using TexturesArr = std::array<Texture, 12>;
 
 Vector2 sq_to_v(const Chess::Square sq);
-Chess::Square v_to_sq(const Vector2 v);
+Chess::Square v_to_sq(const Vector2 &v);
 TexturesArr get_textures();
 void draw_board(const Chess::Board &b, TexturesArr &txtrs);
 void draw_text(const std::string &text);
@@ -50,7 +53,12 @@ int main() {
             // Get piece to promote to
             if (b.is_valid_move(from, to) && b.is_promotion(from, to))
                pt = get_promotion_type();
-            b.make_move(from, to, pt);
+            if (b.make_move(from, to, pt) == Chess::NoErr) {
+               // Play move for the engine
+               //Chess::MoveEval best = search(b, 2);
+               //b.make_move(best.move.from, best.move.to, best.move.pt);
+            }
+            // Reset variables
             from = Chess::NoSquare;
             pt = Chess::Queen;
          }
@@ -93,7 +101,7 @@ Vector2 sq_to_v(const Chess::Square sq) {
    };
 }
 
-Chess::Square v_to_sq(const Vector2 v) {
+Chess::Square v_to_sq(const Vector2 &v) {
    Chess::Square sq = Chess::Square(v.x / consts::pieceSize);
    sq +=  8*(7 - int(v.y / consts::pieceSize));
    return sq;
