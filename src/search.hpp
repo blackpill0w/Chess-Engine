@@ -14,7 +14,7 @@ namespace Chess
 {
 struct MoveEval {
    Move move{};
-   int eval{};
+   int eval = 0;
    bool operator<(const MoveEval& other) const { return eval < other.eval; }
    bool operator>(const MoveEval& other) const { return eval > other.eval; }
    bool operator<=(const MoveEval& other) const { return eval <= other.eval; }
@@ -30,8 +30,7 @@ struct TTData {
 
 inline MoveEval alpha_beta_pruning(Board& b, const unsigned depth,
                                    const bool maximizing_player,
-                                   int alpha, int beta)
-{
+                                   int alpha, int beta) {
    std::vector<Move> moves{ b.get_moves() };
    // Sort according to priority
    std::sort(moves.begin(), moves.end(),
@@ -55,6 +54,7 @@ inline MoveEval alpha_beta_pruning(Board& b, const unsigned depth,
       }
       else if (depth == 0) {
          curr.eval = evaluate(b);
+         res = maximizing_player? std::max(res, curr) : std::min(res, curr);
       }
       else if (maximizing_player) {
          curr.eval = alpha_beta_pruning(b, depth - 1, false, alpha, beta).eval;
@@ -80,8 +80,7 @@ inline MoveEval alpha_beta_pruning(Board& b, const unsigned depth,
 }
 
 inline MoveEval search(Board b,
-         const unsigned depth)
-{
+         const unsigned depth) {
    return alpha_beta_pruning(b, depth, b.color_to_play == White, -999, 999);
 }
 

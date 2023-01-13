@@ -55,8 +55,12 @@ int main() {
                pt = get_promotion_type();
             if (b.make_move(from, to, pt) == Chess::NoErr) {
                // Play move for the engine
-               //Chess::MoveEval best = search(b, 2);
-               //b.make_move(best.move.from, best.move.to, best.move.pt);
+               Chess::MoveEval best = search(b, 2);
+               if (b.make_move(best.move.from, best.move.to) == Chess::InvalidMove) {
+                  std::cout << "Invalid Move\n";
+                  std::cout << sqstr(best.move.from) << " -> " << sqstr(best.move.to) << '\n';
+                  std::cout << best.eval << '\n';
+               }
             }
             // Reset variables
             from = Chess::NoSquare;
