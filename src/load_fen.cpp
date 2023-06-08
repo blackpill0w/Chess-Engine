@@ -15,8 +15,8 @@ static vector<string> split(const string &str, const string &delim);
 
 void Board::load_fen(const string& FEN) {
    if (all_pieces()) for (auto& bb: piecesBB) bb = 0;
-   if (!move_history.empty()) move_history.clear();
-   if (!zobrist.empty()) zobrist.clear();
+   move_history.clear();
+   zobrist.clear();
    state = None;
 
    // Matches FEN notation
