@@ -100,9 +100,15 @@ enum Direction
 };
 static constexpr array<int, DirNum> dir = {
     // Rook directions
-    8, -8, 1, -1,
+    8,
+    -8,
+    1,
+    -1,
     // Bishop directions
-    9, 7, -7, -9,
+    9,
+    7,
+    -7,
+    -9,
 };
 // clang-format on
 
