@@ -11,7 +11,8 @@ using namespace Chess;
 
    @return a Bitboard containing the moves.
 */
-Bitboard gen_sliding_piece_moves(const Square sq, const PieceType t, const Bitboard occ, const Bitboard mypieces);
+Bitboard gen_sliding_piece_moves(const Square sq, const PieceType t, const Bitboard occ,
+                                 const Bitboard mypieces);
 
 /*!
    Generate legal moves of king.
@@ -19,7 +20,8 @@ Bitboard gen_sliding_piece_moves(const Square sq, const PieceType t, const Bitbo
 
    @return a Bitboard containing the moves.
 */
-Bitboard gen_king_moves(const Square sq, const Bitboard occ, const Bitboard mypieces, const PieceColor c, const CastlingRights cr);
+Bitboard gen_king_moves(const Square sq, const Bitboard occ, const Bitboard mypieces,
+                        const PieceColor c, const CastlingRights cr);
 
 /*!
    Generate (pseudo-legal) moves of knight.
@@ -51,4 +53,5 @@ Bitboard gen_double_push(const Square sq, const PieceColor c, const Bitboard occ
 
    @return a Bitboard containing the moves.
 */
-Bitboard gen_pawn_attacks(const Square sq, const PieceColor c, const Bitboard occ, const Bitboard mypieces);
+Bitboard gen_pawn_attacks(const Square sq, const PieceColor c, const Bitboard occ,
+                          const Bitboard mypieces);
