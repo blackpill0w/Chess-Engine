@@ -1,22 +1,27 @@
-#include "./utils.hpp"
-#include "./board.hpp"
-#include "./zobrist.hpp"
-
 #include <iostream>
 #include <string>
 #include <regex>
 #include <cassert>
 
+#include "./utils.hpp"
+#include "./board.hpp"
+#include "./zobrist.hpp"
+
 namespace Chess {
+
+using std::string;
+using std::vector;
 
 static string trim(const string &str);
 static vector<string> split(const string &str, const string &delim);
 
-void Board::load_fen(const string& FEN) {
-   if (all_pieces()) for (auto& bb: piecesBB) bb = 0;
-   move_history.clear();
-   zobrist.clear();
-   state = None;
+void Board::load_fen(const string &FEN) {
+  if (all_pieces())
+    for (auto &bb : piecesBB)
+      bb = 0;
+  move_history.clear();
+  zobrist.clear();
+  state = None;
 
   const std::regex fen_notation_regex{
       "^([kqrbnpKQRBNP1-8]{1,8}\\/){7}[kqrbnpKQRBNP1-8]{1,8} "
