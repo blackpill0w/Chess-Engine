@@ -4,29 +4,31 @@ project(chess-engine CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+option(BUILD_WITH_NIX "Whether to build with nix" ON)
+
 # raylib
 find_package(raylib)
-#if (NOT raylib_FOUND)
-#    include(FetchContent)
-#    FetchContent_Declare(
-#        raylib
-#        GIT_REPOSITORY https://github.com/raysan5/raylib.git
-#        GIT_TAG 4.2.0
-#    )
-#    FetchContent_MakeAvailable(raylib)
-#endif()
+if ((NOT raylib_FOUND) AND (NOT BUILD_WITH_NIX))
+    include(FetchContent)
+    FetchContent_Declare(
+        raylib
+        GIT_REPOSITORY https://github.com/raysan5/raylib.git
+        GIT_TAG 4.2.0
+    )
+    FetchContent_MakeAvailable(raylib)
+endif()
 
 #fmt
 find_package(fmt)
-#if (NOT fmt_FOUND)
-#   include(FetchContent)
-#   FetchContent_Declare(
-#      fmt
-#      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-#      GIT_TAG master
-#   )
-#   FetchContent_MakeAvailable(fmt)
-#endif()
+if ((NOT fmt_FOUND) AND (NOT BUILD_WITH_NIX))
+   include(FetchContent)
+   FetchContent_Declare(
+      fmt
+      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+      GIT_TAG master
+   )
+   FetchContent_MakeAvailable(fmt)
+endif()
 
 include_directories("${CMAKE_HOME_DIRECTORY}/include/")
 
