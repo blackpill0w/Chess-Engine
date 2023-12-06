@@ -44,9 +44,7 @@ std::string sq_to_str(Square sq) {
     return str;
   }
 }
-inline std::ostream &operator<<(std::ostream &os, Square sq) {
-  return os << sq_to_str(sq);
-}
+inline std::ostream &operator<<(std::ostream &os, Square sq) { return os << sq_to_str(sq); }
 [[maybe_unused]] inline void print_bb(Bitboard bb) {
   for (int i = 7; i >= 0; --i) {
     for (unsigned j = 0; j < 8; ++j) {
@@ -90,8 +88,7 @@ static const char pieces_char[] = {'N', 'B', 'R', 'Q', 'K', 'P'};
   return res;
 }
 
-[[maybe_unused]] inline Bitboard perft(Board &b, const int depth,
-                                       const int original_depth = 0) {
+[[maybe_unused]] inline Bitboard perft(Board &b, const int depth, const int original_depth = 0) {
   if (depth == 0)
     return 1ull;
 
@@ -101,13 +98,12 @@ static const char pieces_char[] = {'N', 'B', 'R', 'Q', 'K', 'P'};
   [[maybe_unused]] int x = 0;
   for (size_t i = 0; i < moves.size(); ++i) {
     string m = sqstr(moves[i].from) + sqstr(moves[i].to);
-    if (b.get_piece_type(moves[i].from) == Pawn &&
-        (moves[i].to <= H1 || moves[i].to >= A8)) {
+    if (b.get_piece_type(moves[i].from) == Pawn && (moves[i].to <= H1 || moves[i].to >= A8)) {
       m += pieces_char[moves[i].pt];
     }
     if (b.make_move(moves[i].from, moves[i].to, moves[i].pt) == Chess::InvalidMove) {
-      std::cerr << "perft() invalid move: " << sqstr(moves[i].from) << " -> "
-                << sqstr(moves[i].to) << '\n';
+      std::cerr << "perft() invalid move: " << sqstr(moves[i].from) << " -> " << sqstr(moves[i].to)
+                << '\n';
       print_board(b);
       exit(1);
     };
@@ -128,8 +124,8 @@ inline Bitboard timed_perft(Board &b, int depth) {
   duration<double, milli> exec_time_ms = t2 - t1;
   duration<double> exec_time_s         = exec_time_ms;
   std::cout << "Nodes: " << nodes << '\n';
-  std::cout << "Calculated in: " << exec_time_s.count() << "s, or "
-            << exec_time_ms.count() << "ms\n";
+  std::cout << "Calculated in: " << exec_time_s.count() << "s, or " << exec_time_ms.count()
+            << "ms\n";
   return nodes;
 }
 

@@ -8,16 +8,12 @@ using std::vector;
 /*!
   Removes space/tabs/new line characters from start of string.
 */
-inline string ltrim(const string &str) {
-  return str.substr(str.find_first_not_of(" \t\n"));
-}
+inline string ltrim(const string &str) { return str.substr(str.find_first_not_of(" \t\n")); }
 
 /*!
   Removes space/tabs/new line characters from end of string.
 */
-inline string rtrim(const string &str) {
-  return str.substr(0, str.find_last_not_of(" \t\n") + 1);
-}
+inline string rtrim(const string &str) { return str.substr(0, str.find_last_not_of(" \t\n") + 1); }
 
 /*!
   Removes space/tabs/new line characters from start and end of string.
@@ -27,9 +23,7 @@ inline string trim(const string &str) { return ltrim(rtrim(str)); }
 /*!
   Check if a string starts with another string.
 */
-inline bool start_with(const string &str, const string &str2) {
-  return str.find(str2) == 0;
-}
+inline bool start_with(const string &str, const string &str2) { return str.find(str2) == 0; }
 
 /*!
   Check if a string ends with another string.

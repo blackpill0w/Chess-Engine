@@ -86,13 +86,11 @@ int main() {
     // Highlight selected piece
     if (from != Chess::NoSquare) {
       const Vector2 v = sq_to_v(from);
-      DrawRectangle(v.x, v.y, consts::pieceSize, consts::pieceSize,
-                    Color{255, 0, 0, 100});
+      DrawRectangle(v.x, v.y, consts::pieceSize, consts::pieceSize, Color{255, 0, 0, 100});
       std::vector<Chess::Square> possible_moves{b.get_possible_moves(from)};
       for (auto sq : possible_moves) {
         const Vector2 tmp = sq_to_v(sq);
-        DrawRectangle(tmp.x, tmp.y, consts::pieceSize, consts::pieceSize,
-                      Color{255, 0, 0, 100});
+        DrawRectangle(tmp.x, tmp.y, consts::pieceSize, consts::pieceSize, Color{255, 0, 0, 100});
       }
     }
     draw_board(b, txtrs);

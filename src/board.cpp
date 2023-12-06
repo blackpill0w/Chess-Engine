@@ -17,10 +17,7 @@ namespace Chess {
 int Move::getval(const Board &b) const {
   // The values returned are just arbitrary numbers,
   // the important is for promotion to be greater than normal move etc.
-  return b.is_promotion(from, to) ? 50
-         : b.is_capture(to)       ? 25
-         : b.is_castle(from, to)  ? 12
-                                  : 1;
+  return b.is_promotion(from, to) ? 50 : b.is_capture(to) ? 25 : b.is_castle(from, to) ? 12 : 1;
 }
 bool Move::less_than(const Move &other, const Board &b) const {
   return getval(b) < other.getval(b);
@@ -36,13 +33,11 @@ Board::Board(const string &FEN) : piecesBB{}, move_history{}, movelist{}, zobris
 BoardState Board::get_state() const { return state; }
 
 Bitboard Board::white_pieces() const {
-  return piecesBB[WK] | piecesBB[WQ] | piecesBB[WR] | piecesBB[WB] | piecesBB[WN] |
-         piecesBB[WP];
+  return piecesBB[WK] | piecesBB[WQ] | piecesBB[WR] | piecesBB[WB] | piecesBB[WN] | piecesBB[WP];
 }
 
 Bitboard Board::black_pieces() const {
-  return piecesBB[BK] | piecesBB[BQ] | piecesBB[BR] | piecesBB[BB] | piecesBB[BN] |
-         piecesBB[BP];
+  return piecesBB[BK] | piecesBB[BQ] | piecesBB[BR] | piecesBB[BB] | piecesBB[BN] | piecesBB[BP];
 }
 
 Bitboard Board::all_pieces() const { return white_pieces() | black_pieces(); }
@@ -95,13 +90,9 @@ PieceColor Board::get_piece_color(const Square sq) const {
   return sqbb(sq) & white_pieces() ? White : sqbb(sq) & black_pieces() ? Black : NoColor;
 }
 
-bool Board::is_square_occupied(const Square sq) const {
-  return (sqbb(sq) & all_pieces()) != 0;
-}
+bool Board::is_square_occupied(const Square sq) const { return (sqbb(sq) & all_pieces()) != 0; }
 
-bool Board::in_check() const {
-  return get_pieces(color_to_play, King) & attacked_by_enemy;
-}
+bool Board::in_check() const { return get_pieces(color_to_play, King) & attacked_by_enemy; }
 
 bool Board::is_capture(const Square to) const { return 0 != (to & all_pieces()); }
 
@@ -116,22 +107,20 @@ bool Board::is_promotion(const Square from, const Square to) const {
 }
 
 vector<Square> Board::get_possible_moves(const Square sq) const {
-  auto piece = find_if(movelist.begin(), movelist.end(),
-                       [&](const PieceMoves &pm) { return pm.pos == sq; });
+  auto piece =
+      find_if(movelist.begin(), movelist.end(), [&](const PieceMoves &pm) { return pm.pos == sq; });
   if (piece == movelist.end())
     return {};
 
   std::vector<Square> res{};
-  res.reserve(16);
+  res.reserve(32);
   Bitboard possible_moves = piece->possible_moves;
   while (possible_moves)
     res.emplace_back(pop_lsb(possible_moves));
   return res;
 }
 
-void Board::remove_piece_at(const Square sq) {
-  piecesBB[get_pieceBB_index(sq)] &= ~sqbb(sq);
-}
+void Board::remove_piece_at(const Square sq) { piecesBB[get_pieceBB_index(sq)] &= ~sqbb(sq); }
 
 MoveData Board::gen_move_data(const Square from, const Square to,
                               const PieceType promote_to) const {
@@ -146,8 +135,7 @@ MoveData Board::gen_move_data(const Square from, const Square to,
   else if (is_castle(from, to)) {
     mt = Castling;
   }
-  return new_md(from, to, promote_to, mt, taken_pt, cr, enpassant_square,
-                fifty_move_counter);
+  return new_md(from, to, promote_to, mt, taken_pt, cr, enpassant_square, fifty_move_counter);
 }
 
 Bitboard Board::attackers_of(const Square sq) const {
@@ -158,10 +146,8 @@ Bitboard Board::attackers_of(const Square sq) const {
          (get_pieces(~myc, Rook) | get_pieces(~myc, Queen));
   res |= gen_sliding_piece_moves(sq, Bishop, all_pieces(), get_pieces(myc, NoType)) &
          (get_pieces(~myc, Bishop) | get_pieces(~myc, Queen));
-  res |= gen_knight_moves(sq, all_pieces(), get_pieces(myc, NoType)) &
-         get_pieces(~myc, Knight);
-  res |= gen_pawn_attacks(sq, myc, all_pieces(), get_pieces(myc, NoType)) &
-         get_pieces(~myc, Pawn);
+  res |= gen_knight_moves(sq, all_pieces(), get_pieces(myc, NoType)) & get_pieces(~myc, Knight);
+  res |= gen_pawn_attacks(sq, myc, all_pieces(), get_pieces(myc, NoType)) & get_pieces(~myc, Pawn);
   res |= gen_king_moves(sq, all_pieces(), get_pieces(myc, NoType), myc, NoCastling) &
          get_pieces(~myc, King);
 
@@ -184,8 +170,7 @@ Bitboard Board::gen_piece_moves(const Square sq, const Bitboard occ,
   }
   else if (pt == Pawn) {
     res = gen_pawn_attacks(sq, myc, occ, mypieces);
-    if ((myc == White && get_rank(sq) == rank2) ||
-        (myc == Black && get_rank(sq) == rank7)) {
+    if ((myc == White && get_rank(sq) == rank2) || (myc == Black && get_rank(sq) == rank7)) {
       res |= gen_double_push(sq, myc, occ);
     }
     else {
@@ -196,17 +181,20 @@ Bitboard Board::gen_piece_moves(const Square sq, const Bitboard occ,
 }
 
 void Board::limit_moves_of_pinned_pieces() {
-  const Square king_sq                      = lsb(get_pieces(color_to_play, King));
+  const Square king_sq = lsb(get_pieces(color_to_play, King));
+  // clang-format off
   const array<Bitboard, 2> possible_pinners = {
-      (rank_bb(king_sq) | file_bb(king_sq)) &
-          (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Rook)),
-      (diagonal_bb(king_sq) | anti_diagonal_bb(king_sq)) &
-          (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Bishop))};
+    // Get bitboard of queens and rooks that are on the same file or rank as the king
+    (rank_bb(king_sq) | file_bb(king_sq)) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Rook)),
+    // Get bitboard of queens and bishops that are on the same diagonal or anti-diagonal as the king
+    (diagonal_bb(king_sq) | anti_diagonal_bb(king_sq)) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Bishop))
+  };
+  // clang-format on
   for (auto i : possible_pinners) {  // copy not reference
     while (i) {
       const Square pinner    = pop_lsb(i);
       const Bitboard between = between_bb(king_sq, pinner);
-      if (! more_than_one(between & all_pieces() & ~sqbb(pinner))) {
+      if (not more_than_one(between & all_pieces() & ~sqbb(pinner))) {
         auto pm = find_if(movelist.begin(), movelist.end(),
                           [&](PieceMoves &pm) { return 0 != (sqbb(pm.pos) & between); });
         if (pm != movelist.end())
@@ -249,18 +237,14 @@ void Board::gen_board_legal_moves() {
   // Handling en passant discovered check
   // TODO: improve this?
   const Bitboard ep_pawn =
-      enpassant_square == NoSquare
-          ? 0
-          : sqbb(enpassant_square - 8 * pawn_direction(color_to_play));
+      enpassant_square == NoSquare ? 0 : sqbb(enpassant_square - 8 * pawn_direction(color_to_play));
   if (rank_bb(king_sq) & ep_pawn) {
     const Bitboard possible_attacker =
-        rank_bb(king_sq) &
-        (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Rook));
+        rank_bb(king_sq) & (get_pieces(~color_to_play, Queen) | get_pieces(~color_to_play, Rook));
     if (possible_attacker) {
       const Square attacker_sq = lsb(possible_attacker);
       const Bitboard between   = between_bb(king_sq, attacker_sq) & ~sqbb(attacker_sq);
-      if (popcnt(between & all_pieces()) == 2 &&
-          (ep_pawn & get_pieces(~color_to_play, Pawn)) &&
+      if (popcnt(between & all_pieces()) == 2 && (ep_pawn & get_pieces(~color_to_play, Pawn)) &&
           ((ep_pawn >> 1 | ep_pawn << 1) & get_pieces(color_to_play, Pawn))) {
         enpassant_square = NoSquare;
       }
@@ -277,8 +261,7 @@ void Board::gen_board_legal_moves() {
     const Bitboard ep = get_piece_type(sq) == Pawn ? sqbb(enpassant_square) : 0;
     PieceMoves pm{sq, gen_piece_moves(sq, all_pieces() | ep, get_pieces(color_to_play))};
 
-    if (get_piece_type(sq) == Pawn &&
-        (((ep >> 8) & attackers) || ((ep << 8) & attackers))) {
+    if (get_piece_type(sq) == Pawn && (((ep >> 8) & attackers) || ((ep << 8) & attackers))) {
       pm.possible_moves &= possible_moves | ep;
     }
     else if (sq != king_sq) {
@@ -288,8 +271,7 @@ void Board::gen_board_legal_moves() {
       pm.possible_moves &= ~attacked_by_enemy;
       const Bitboard sc =
           get_piece_color(sq) == White ? WKSCastlingSquaresBB : BKSCastlingSquaresBB;
-      const Bitboard lc =
-          sc == WKSCastlingSquaresBB ? WQSCastlingSquaresBB : BQSCastlingSquaresBB;
+      const Bitboard lc = sc == WKSCastlingSquaresBB ? WQSCastlingSquaresBB : BQSCastlingSquaresBB;
       // Long castle is illegal if the B file is occupied, but legal if it's attacked
       const Bitboard not_to_occupy_in_lc = sqbb(color_to_play == White ? B1 : B8);
       if ((cr & (color_to_play == White ? White_OO : Black_OO)) &&
@@ -377,8 +359,7 @@ void Board::handle_castling_rights_changes(const Square from, const Square to) {
   }
 }
 
-BoardErr Board::make_move(const Square from, const Square to,
-                          const PieceType promote_to) {
+BoardErr Board::make_move(const Square from, const Square to, const PieceType promote_to) {
   if (! is_valid_move(from, to))
     return InvalidMove;
   if (state == Draw || state == Checkmate)

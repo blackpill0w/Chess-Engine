@@ -82,10 +82,8 @@ Bitboard gen_king_moves(const Square sq, const Bitboard occ, const Bitboard mypi
   }
 
   // TODO: replace castlingSquaresBB with between_bb() for more flexibility
-  const Bitboard KSCastlingSquaresBB =
-      (c == White ? WKSCastlingSquaresBB : BKSCastlingSquaresBB);
-  const Bitboard QSCastlingSquaresBB =
-      (c == White ? WQSCastlingSquaresBB : BQSCastlingSquaresBB);
+  const Bitboard KSCastlingSquaresBB = (c == White ? WKSCastlingSquaresBB : BKSCastlingSquaresBB);
+  const Bitboard QSCastlingSquaresBB = (c == White ? WQSCastlingSquaresBB : BQSCastlingSquaresBB);
   // King side castling
   if (cr & (c == White ? White_OO : Black_OO)) {
     if (! (occ & KSCastlingSquaresBB)) {

@@ -4,11 +4,9 @@ project(chess-engine CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-option(BUILD_WITH_NIX "Whether to build with nix" ON)
-
 # raylib
 find_package(raylib)
-if ((NOT raylib_FOUND) AND (NOT BUILD_WITH_NIX))
+if (NOT raylib_FOUND)
     include(FetchContent)
     FetchContent_Declare(
         raylib
@@ -20,7 +18,7 @@ endif()
 
 #fmt
 find_package(fmt)
-if ((NOT fmt_FOUND) AND (NOT BUILD_WITH_NIX))
+if (NOT fmt_FOUND)
    include(FetchContent)
    FetchContent_Declare(
       fmt

@@ -26,8 +26,7 @@ int main(int argc, char **argv) {
     assure(1, b, 3, 62'379, true);
   }
   {  // Test 2
-    Chess::Board b{
-        "r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10"};
+    Chess::Board b{"r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10"};
     assure(2, b, 3, 89'890, true);
   }
   {  // Test 3
@@ -57,8 +56,7 @@ void help() {
 
 void assure(const int testID, Chess::Board &b, const int depth, const size_t expected,
             const bool print_time) {
-  const auto generated{print_time ? Chess::timed_perft(b, depth)
-                                  : Chess::perft(b, depth)};
+  const auto generated{print_time ? Chess::timed_perft(b, depth) : Chess::perft(b, depth)};
   if (generated != expected) {
     fmt::print(stderr, "Test {}: ", testID);
     fmt::print(stderr, fg(fmt::color::red) | fmt::emphasis::bold, "failed! ");

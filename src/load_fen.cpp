@@ -79,8 +79,7 @@ void Board::load_fen(const string &FEN) {
     enpassant_square = NoSquare;
   // Regex doesn't allow invalid squares, so no checks
   else
-    enpassant_square =
-        Square((std::tolower(tokens[3][0]) - 'a') * 8 + tokens[3][1] - '1');
+    enpassant_square = Square((std::tolower(tokens[3][0]) - 'a') * 8 + tokens[3][1] - '1');
   // Again, no need for checks
   if (tokens.size() > 4)
     fifty_move_counter = std::stoi(tokens[4]);

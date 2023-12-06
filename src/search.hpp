@@ -27,8 +27,8 @@ struct TTData {
   uint8_t depth{};
 };
 
-inline MoveEval alpha_beta_pruning(Board &b, const unsigned depth,
-                                   const bool maximizing_player, int alpha, int beta) {
+inline MoveEval alpha_beta_pruning(Board &b, const unsigned depth, const bool maximizing_player,
+                                   int alpha, int beta) {
   std::vector<Move> moves{b.get_moves()};
   // Sort according to priority
   std::sort(moves.begin(), moves.end(),
