@@ -23,7 +23,7 @@ void Board::load_fen(const string &FEN) {
   zobrist.clear();
   state = None;
 
-  const std::regex fen_notation_regex{
+  static const std::regex fen_notation_regex{
       "^([kqrbnpKQRBNP1-8]{1,8}\\/){7}[kqrbnpKQRBNP1-8]{1,8} "
       "(w|b) (-|[KQkq]{1,4}) (-|(([A-H]|[a-h])[1-8]))( (0|(100)|([1-9][0-9]?)))?( "
       "[0-9]{1,3})?$"};
@@ -45,12 +45,15 @@ void Board::load_fen(const string &FEN) {
       x += c - '0';
     else {
       const char lc = tolower(c);
-      int i         = lc == 'k'   ? WK
-                      : lc == 'q' ? WQ
-                      : lc == 'r' ? WR
-                      : lc == 'b' ? WB
-                      : lc == 'n' ? WN
-                                  : WP;
+      int i;
+      switch (lc) {
+        case 'k': i = WK; break;
+        case 'q': i = WQ; break;
+        case 'r': i = WR; break;
+        case 'b': i = WB; break;
+        case 'n': i = WN; break;
+        default: i = WP; break;
+      }
       if (islower(c))
         i += 6;
       piecesBB[i] |= 1ull << (x + y * 8);
@@ -64,26 +67,26 @@ void Board::load_fen(const string &FEN) {
   cr = NoCastling;
   if (tokens[2] != "-") {
     for (auto c : tokens[2]) {
-      if (c == 'K')
-        cr |= White_OO;
-      else if (c == 'Q')
-        cr |= White_OOO;
-      else if (c == 'k')
-        cr |= Black_OO;
-      else if (c == 'q')
-        cr |= Black_OOO;
+      switch (c) {
+        case 'K': cr |= White_OO; break;
+        case 'Q': cr |= White_OOO; break;
+        case 'k': cr |= Black_OO; break;
+        default: cr |= Black_OOO; break;  // 'q'
+      }
     }
   }
 
-  if (tokens[3] == "-")
+  if (tokens[3] == "-") {
     enpassant_square = NoSquare;
-  // Regex doesn't allow invalid squares, so no checks
-  else
+  }
+  // Regex doesn't allow invalid squares, so no checks are needed
+  else {
     enpassant_square = Square((std::tolower(tokens[3][0]) - 'a') * 8 + tokens[3][1] - '1');
+  }
   // Again, no need for checks
-  if (tokens.size() > 4)
+  if (tokens.size() > 4) {
     fifty_move_counter = std::stoi(tokens[4]);
-
+  }
   gen_board_legal_moves();
   zobrist.emplace_back(calc_zobrist_key());
   std::cout << "\n\n[Engine] Loaded FEN position: " << fen << '\n';
