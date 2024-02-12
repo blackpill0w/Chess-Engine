@@ -19,6 +19,7 @@ int Move::getval(const Board &b) const {
   // the important is for promotion to be greater than normal move etc.
   return b.is_promotion(from, to) ? 50 : b.is_capture(to) ? 25 : b.is_castle(from, to) ? 12 : 1;
 }
+
 bool Move::less_than(const Move &other, const Board &b) const {
   return getval(b) < other.getval(b);
 }
@@ -45,22 +46,14 @@ Bitboard Board::all_pieces() const { return white_pieces() | black_pieces(); }
 Bitboard Board::get_pieces(const PieceColor c, const PieceType pt) const {
   const int i = c == White ? 0 : 6;
   switch (pt) {
-    case King:
-      return piecesBB[WK + i];
-    case Queen:
-      return piecesBB[WQ + i];
-    case Rook:
-      return piecesBB[WR + i];
-    case Bishop:
-      return piecesBB[WB + i];
-    case Knight:
-      return piecesBB[WN + i];
-    case Pawn:
-      return piecesBB[WP + i];
-    case NoType:
-      return c == White ? white_pieces() : black_pieces();
-    default:
-      return 0;
+    case King: return piecesBB[WK + i];
+    case Queen: return piecesBB[WQ + i];
+    case Rook: return piecesBB[WR + i];
+    case Bishop: return piecesBB[WB + i];
+    case Knight: return piecesBB[WN + i];
+    case Pawn: return piecesBB[WP + i];
+    case NoType: return c == White ? white_pieces() : black_pieces();
+    default: return 0;
   }
 }
 

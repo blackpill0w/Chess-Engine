@@ -119,8 +119,7 @@ inline constexpr size_t bishop_dir_start = 4;
 inline constexpr size_t bishop_dir_end   = 7;
 
 using CastlingRights = uint8_t;
-enum
-{
+enum {
   NoCastling,
   White_OO,
   Black_OO      = 1 << 1,
@@ -149,8 +148,7 @@ inline constexpr Bitboard BQSCastlingSquaresBB = (1ull << C8) | (1ull << D8);
   bit 30-36: value of 50 move rule counter
 */
 using MoveData = uint64_t;
-enum MoveType
-{
+enum MoveType {
   Normal,
   Promotion,
   En_passant,
@@ -166,11 +164,10 @@ inline constexpr Bitboard md_castling_rights  = 15 << 19;
 inline constexpr Bitboard md_ep_square        = 127 << 23;
 inline constexpr Bitboard md_fmrc             = 127ul << 30;
 
-inline constexpr MoveData new_md(Square from, Square to, PieceType pt, MoveType mt,
-                                 PieceType taken, CastlingRights cr, Square ep_square,
-                                 size_t fmrc) {
-  return ((fmrc & 127) << 30) | (ep_square << 23) | (cr << 19) | (taken << 16) |
-         (mt << 14) | (pt << 12) | (to << 6) | from;
+inline constexpr MoveData new_md(Square from, Square to, PieceType pt, MoveType mt, PieceType taken,
+                                 CastlingRights cr, Square ep_square, size_t fmrc) {
+  return ((fmrc & 127) << 30) | (ep_square << 23) | (cr << 19) | (taken << 16) | (mt << 14) |
+         (pt << 12) | (to << 6) | from;
 }
 inline constexpr Square md_get_square_from(MoveData m) { return Square(m & md_from); }
 inline constexpr Square md_get_square_to(MoveData m) { return Square((m & md_to) >> 6); }
@@ -186,9 +183,7 @@ inline constexpr PieceType md_get_taken_piece_type(MoveData m) {
 inline constexpr CastlingRights md_get_castling_rights(MoveData m) {
   return CastlingRights((m & md_castling_rights) >> 19);
 }
-inline constexpr Square md_get_ep_square(MoveData m) {
-  return Square((m & md_ep_square) >> 23);
-}
+inline constexpr Square md_get_ep_square(MoveData m) { return Square((m & md_ep_square) >> 23); }
 
 inline constexpr size_t md_get_fmrc(MoveData m) { return (m & md_fmrc) >> 30; }
 

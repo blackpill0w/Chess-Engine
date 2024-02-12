@@ -53,7 +53,7 @@ inline constexpr array<Bitboard, 15> diagonals = {
 };
 
 inline constexpr Bitboard diagonal_bb(Square sq) {
-  return diagonals[(get_rank(sq) - get_file(sq)) + 7];
+  return diagonals[(static_cast<int>(get_rank(sq)) - static_cast<int>(get_file(sq))) + 7];
 }
 inline constexpr bool squares_on_same_diagonal(Square sq1, Square sq2) {
   return ((sq2 - sq1) % 9) == 0;
@@ -85,7 +85,7 @@ inline constexpr Bitboard dt  = 0x0102040810204080;
 inline constexpr Bitboard adt = 0x8040201008040201;
 
 inline constexpr Bitboard anti_diagonal_bb(Square sq) {
-  return anti_diagonals.at(get_rank(sq) + get_file(sq));
+  return anti_diagonals.at(static_cast<int>(get_rank(sq)) + static_cast<int>(get_file(sq)));
 }
 inline constexpr bool squares_on_same_antidiagonal(Square sq1, Square sq2) {
   // NOTE: for some reason the code snippet from https://chessprogramming.org didn't

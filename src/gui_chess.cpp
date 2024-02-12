@@ -14,7 +14,7 @@
 namespace consts {
 // size of image = size of image to avoid complicating stuff
 constexpr int pieceSize = 60;
-constexpr int winW      = pieceSize * 8;
+constexpr int winW      = pieceSize * 8 + 140;
 constexpr int winH      = pieceSize * 8;
 }  // namespace consts
 
@@ -44,7 +44,36 @@ int main() {
   // Saves the piece to promote to
   Chess::PieceType pt = Chess::Queen;
 
-  while (! WindowShouldClose()) {
+  // 1: do nothing, 2: move has been made, 3: exit
+  std::atomic_int board_state = 1;
+  std::atomic<Chess::Move> best_move;
+
+  auto engine_func = [&](std::atomic_int &b_state, std::atomic<Chess::Move> &best_move,
+                         Chess::Board &b_) {
+    int engine_depth     = 1;
+    Chess::Board local_b = b;
+    while (true) {
+      if (b_state == 3) {
+        break;
+      }
+      else if (b_state == 1) {
+        const auto sq = Chess::search(local_b, engine_depth);
+
+        best_move = sq.move;
+        ++engine_depth;
+      }
+      else if (b_state == 2) {
+        local_b      = b;
+        engine_depth = 1;
+        b_state      = 1;
+      }
+    }
+  };
+
+  std::thread engine_thread{[&]() { engine_func(board_state, best_move, b); }};
+  engine_thread.detach();
+
+  while (not WindowShouldClose()) {
     // Mouse pos
     const Vector2 mp = GetMousePosition();
 
@@ -58,18 +87,17 @@ int main() {
         if (b.is_valid_move(from, to) && b.is_promotion(from, to))
           pt = get_promotion_type();
         if (b.make_move(from, to, pt) == Chess::NoErr) {
-          Chess::MoveEval best = search(b, 2);
-          std::cout << "[Engine] Best move: " << sq_to_str(best.move.from) + " -> "
-                    << sq_to_str(best.move.to) << std::endl;
+          board_state = 2;
           // Play move for the engine
-          /*Chess::MoveEval best = search(b, 2);
+          /*
+          Chess::MoveEval best = search(b, 2);
           if (b.make_move(best.move.from, best.move.to) == Chess::InvalidMove) {
-             std::cout << "Invalid Move\n";
-             std::cout << sqstr(best.move.from) << " -> " << sqstr(best.move.to) << '\n';
-             std::cout << best.eval << '\n';
-             for (auto& move: b.get_moves()) {
-                std::cout << move.from << " -> " << move.to << '\n';
-             }
+            std::cout << "Invalid Move\n";
+            std::cout << sqstr(best.move.from) << " -> " << sqstr(best.move.to) << '\n';
+            std::cout << best.eval << '\n';
+            for (auto &move : b.get_moves()) {
+              std::cout << move.from << " -> " << move.to << '\n';
+            }
           }
           */
         }
@@ -101,6 +129,12 @@ int main() {
     if (b.get_state() == Chess::Draw)
       draw_text("Draw!");
 
+    const auto bm = best_move.load();
+    const std::string s =
+        "From: " + Chess::sq_to_str(bm.from) + "\nTo:    " + Chess::sq_to_str(bm.to);
+
+    DrawText(s.c_str(), consts::pieceSize * 8 + 10, 30, 28, GREEN);
+
     EndDrawing();
   }
 
@@ -111,7 +145,7 @@ int main() {
 }
 
 Vector2 sq_to_v(const Chess::Square sq) {
-  return (Vector2){
+  return Vector2{
       float(sq % 8) * consts::pieceSize,
       float(7 - int(sq / 8)) * consts::pieceSize,
   };
