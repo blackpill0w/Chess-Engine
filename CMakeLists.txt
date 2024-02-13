@@ -3,30 +3,21 @@ project(chess-engine CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_EXTENSIONS OFF)
+string(CONCAT CMAKE_CXX_FLAGS
+  "${CMAKE_CXX_FLAGS}"
+  " -Wall -Wextra"
+  " -Wsign-conversion -Wduplicated-cond"
+  " -Wduplicated-branches -Wlogical-op"
+  " -Wnull-dereference -Wuseless-cast"
+  " -Wformat=2 -Wformat-security")
 
-# raylib
-find_package(raylib)
-if (NOT raylib_FOUND)
-    include(FetchContent)
-    FetchContent_Declare(
-        raylib
-        GIT_REPOSITORY https://github.com/raysan5/raylib.git
-        GIT_TAG 4.2.0
-    )
-    FetchContent_MakeAvailable(raylib)
-endif()
 
-#fmt
-find_package(fmt)
-if (NOT fmt_FOUND)
-   include(FetchContent)
-   FetchContent_Declare(
-      fmt
-      GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-      GIT_TAG master
-   )
-   FetchContent_MakeAvailable(fmt)
-endif()
+set(BUILD_SHARED_LIBS OFF)
+set(BUILD_TESTING OFF)
+
+add_subdirectory("deps/raylib-4.2.0")
+add_subdirectory("deps/fmt")
 
 include_directories("${CMAKE_HOME_DIRECTORY}/include/")
 
@@ -38,11 +29,13 @@ set(chess_engine_sources
   src/load_fen.cpp
   src/board.cpp
 )
-add_library(chess_engine SHARED ${chess_engine_sources})
+add_library(chess_engine ${chess_engine_sources})
 
-set(tests_sources src/tests.cpp)
-add_executable(chess_tests ${tests_sources})
-target_link_libraries(chess_tests chess_engine fmt)
+if(BUILD_TESTING)
+  set(tests_sources src/tests.cpp)
+  add_executable(chess_tests ${tests_sources})
+  target_link_libraries(chess_tests chess_engine fmt)
+endif()
 
 set(perft_sources src/perft.cpp)
 add_executable(chess_perft ${perft_sources})
